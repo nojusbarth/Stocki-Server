@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>90f781b1-83cb-4126-8cc0-e0e18453fd96</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>main.py</StartupFile>
+    <StartupFile>__init__.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -24,7 +24,7 @@
   <ItemGroup>
     <Compile Include="drbLayout.py" />
     <Compile Include="lineFit.py" />
-    <Compile Include="main.py" />
+    <Compile Include="__init__.py" />
     <Compile Include="plotXY.py" />
     <Compile Include="stockList.py" />
     <Compile Include="stockMath.py" />

@@ -8,6 +8,7 @@ from scipy.fftpack import fft
 import scipy.signal as signal
 import numpy as np
 from yahoofinancials import YahooFinancials
+import yfinance as yf
 from matplotlib.ticker import MaxNLocator
 from stockMath import *
 from stockList import *
@@ -20,6 +21,9 @@ import json
 #NEW 
 import pandas as pd
 #
+
+#NEW NEW
+from datetime import timedelta
 
 from idlelib.tooltip import Hovertip
 
@@ -65,14 +69,16 @@ class WindowMng():
             self.stock_dict = STOCKI_STOCKNAMES
 
         
-       
-        self.yahoo_financials = YahooFinancials(list(self.stock_dict.values()))
         today = date.today()
         enddate = today.strftime("%Y-%m-%d")
+
+        #for testing pull from last 3 days
+        startdate = (today - timedelta(days=3)).strftime("%Y-%m-%d")
+        #
+
+
         print("try reading historical price data")
-        self.pricedata = self.yahoo_financials.get_historical_price_data(start_date=enddate, 
-                                                      end_date=enddate, 
-                                                      time_interval='daily')
+        self.pricedata = yf.download(list(self.stock_dict.values()), start=startdate, end=enddate, interval='1d',group_by='ticker')
         
         
         ##new
@@ -116,7 +122,8 @@ class WindowMng():
         
         stock_key = self.comboStockname.get()
         stock_name = self.stock_dict[stock_key]
-        self.maxDays = len(self.pricedata[stock_name]['prices'])
+        self.maxDays = len(self.pricedata[stock_name])
+        print(self.pricedata[stock_name]['Close'])
         
         self.butShowPrev = ttk.Button(frameNav, text='<', width=10, command=self.showPrev)
         self.butShowPrev.grid(column=0, row=1, sticky="ew", padx=5, pady=5)
@@ -323,21 +330,21 @@ class WindowMng():
                 print(str(i) + ' except')
                 
     #
-    def getDataList(self, stockname, dataname1, dataname2):
-        stockprices = self.pricedata[stockname]['prices']
-        dlist1 = []
-        dlist2 = []
-        for i in range(0, len(stockprices)):
-            if stockprices[i][dataname1] != None:
-                dlist1.append(stockprices[i][dataname1])
-                if dataname2 != '':
-                    dlist2.append(stockprices[i][dataname2])
+    #WARNING: DATE CANNOT BE USED AS DATANAME 1 BECAUSE YFINANCE HAS NO 'DATE' TABLE ACCESS
+    def getDataList(self, stockname, dataname1):
+        dlist1 = self.pricedata[stockname][dataname1].tolist()
+        dlist2 = self.pricedata.index.tolist()
+
         return dlist1, dlist2
     
     #
     def getStockprice(self, stock_name, ndays):
-        stockprices = self.pricedata[stock_name]['prices']
-        stpriceclose, stdates = self.getDataList(stock_name, 'close', 'formatted_date')
+
+        #TODO: allow any number of days
+        if ndays > self.maxDays:
+            ndays = self.maxDays
+
+        stpriceclose = self.pricedata[stock_name]['Close'].tolist()
         n = len(stpriceclose) - ndays
         return  stpriceclose[n:]
     
@@ -345,12 +352,11 @@ class WindowMng():
     # returns stock price data for the last ndays
     #
     def getStockdata(self, stock_name, ndays, nmomentum, naverage):
-        stpriceopen, stdates = self.getDataList(stock_name, 'open', 'formatted_date')
-        stpriceclose, stdates = self.getDataList(stock_name, 'close', 'formatted_date')
-        stpriceadjclose, stdates = self.getDataList(stock_name, 'adjclose', 'formatted_date') # not used
-        stpricehigh, stdates = self.getDataList(stock_name, 'high', 'formatted_date')
-        stpricelow, stdates = self.getDataList(stock_name, 'low', 'formatted_date')
-        volume, stdates = self.getDataList(stock_name, 'volume', 'formatted_date')
+        stpriceopen, stdates = self.getDataList(stock_name, 'Open')
+        stpriceclose, stdates = self.getDataList(stock_name, 'Close')
+        stpricehigh, stdates = self.getDataList(stock_name, 'High')
+        stpricelow, stdates = self.getDataList(stock_name, 'Low')
+        volume, stdates = self.getDataList(stock_name, 'Volume')
         
         momentum = self.stockMath.getMomentum(stpriceclose, int(nmomentum))
         average =  self.stockMath.getAverage(stpriceclose, int(naverage))
