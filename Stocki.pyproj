@@ -24,6 +24,10 @@
   <ItemGroup>
     <Compile Include="drbLayout.py" />
     <Compile Include="lineFit.py" />
+    <Compile Include="model\Stock.py" />
+    <Compile Include="model\StockFiles.py" />
+    <Compile Include="model\StockManager.py" />
+    <Compile Include="model\__init__.py" />
     <Compile Include="__init__.py" />
     <Compile Include="plotXY.py" />
     <Compile Include="stockList.py" />
@@ -40,6 +44,9 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
       <Architecture>X64</Architecture>
     </Interpreter>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="model\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

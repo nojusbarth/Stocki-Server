@@ -2,18 +2,27 @@
 
 import tkinter as tk
 from tkinter import ttk
+from model import Stock, StockManager
 from windowMng import *
 
 #
 if __name__ == "__main__":
     
     # root
-    root = tk.Tk()
-    root.configure(bg='light steel blue')
-    root.state('zoomed')
+    #root = tk.Tk()
+    #root.configure(bg='light steel blue')
+    #root.state('zoomed')
     #root.geometry(STOCKI_LAYOUT_frameGeometry)
-    root.title(STOCKI_LAYOUT_AppTitle)
+    #root.title(STOCKI_LAYOUT_AppTitle)
     
-    wm = WindowMng(root)
+    #wm = WindowMng(root)
         
-    root.mainloop()
+    #root.mainloop()
+
+
+    stockManager = StockManager.StockManager()
+
+    stockManager.updateStocks()
+
+    stockManager.addStock('AAPL')
+    stockManager.addStock('GOOGL')
