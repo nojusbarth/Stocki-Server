@@ -35,3 +35,6 @@ class Stock():
     def getLatestUpdateTime(self):
         return self.latestUpdate
 
+    def getData(self):
+        return self.data
+

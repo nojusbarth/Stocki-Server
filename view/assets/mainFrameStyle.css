@@ -1,0 +1,90 @@
+
+/* Gesamt-Container */
+.frame {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    border: 2px solid #4A90E2;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Ueberschrift */
+.frame h1 {
+    text-align: center;
+    color: #f00;
+    margin-bottom: 20px;
+}
+
+
+/* Suchfunktion */
+
+.search-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* linksbuendig */
+    gap: 15px; /* Abstand zwischen Texten, falls mehrere Elemente */
+}
+
+/* SearchDropdown-Container */
+.search-dropdown-container {
+    margin-top: 10px;
+    width: 250px; /* feste Breite fuer Dropdown */
+}
+
+/* SearchDropdown selbst */
+#search-column-selector {
+    font-size: 14px;
+}
+
+
+/* Plot-Bereich */
+.plot-container {
+    margin-top: 25px;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+/* Plot-Titel ueber dem Graphen */
+.plot-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* linksbuendig */
+    gap: 15px; /* Abstand zwischen Texten, falls mehrere Elemente */
+}
+
+
+/* Container fuer die plot beeinflussenden dropdowns: Daten und Kategorie nebeneinander */
+.plot-data-row {
+    display: flex;
+    gap: 15px; /* Abstand zwischen den Dropdowns */
+    margin-top: 10px;
+}
+
+/* Zeitraumauswahl Dropdown */
+.days-dropdown-container {
+    width: 200px;
+}
+
+/* Optional Styling fuer den neuen Dropdown */
+#days-selector {
+    font-size: 14px;
+}
+
+/* Container fuer die Daten-Dropdown */
+.data-dropdown-container {
+    width: 250px; /* feste Breite fuer Dropdown */
+}
+
+/* DataDropdown selbst */
+#data-column-selector {
+    font-size: 14px;
+}
+

@@ -3,6 +3,7 @@
 import tkinter as tk
 from tkinter import ttk
 from model import Stock, StockManager
+from view import MainFrame
 from windowMng import *
 
 #
@@ -19,10 +20,9 @@ if __name__ == "__main__":
         
     #root.mainloop()
 
-
     stockManager = StockManager.StockManager()
 
-    stockManager.updateStocks()
 
-    stockManager.addStock('AAPL')
-    stockManager.addStock('GOOGL')
+    frame = MainFrame.MainFrame(stockManager=stockManager)
+    frame.run()
+

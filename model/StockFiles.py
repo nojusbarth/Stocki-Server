@@ -18,7 +18,7 @@ class StockFiles:
             stockName = csv_stock.stem
             print(f"Loading stock: {stockName}")
             #load stock data from csv file
-            stockData = pd.read_csv(csv_stock, index_col="Date", header=2, parse_dates=["Date"])
+            stockData = pd.read_csv(csv_stock, index_col="Date", parse_dates=["Date"])
             stockMap[stockName] = stockData
 
         print(f"{len(stockMap)} Stocks loaded successfully.")

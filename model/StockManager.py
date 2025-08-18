@@ -34,6 +34,8 @@ class StockManager():
                 print(f"Updating stock: {stock.getName()}")
                 #fetch new data from the internet
                 newData = yf.download(stock.getName(), start=stock.getLatestUpdateTime(), end=currentDate, interval='1d')
+                if isinstance(newData.columns, pd.MultiIndex):
+                    newData.columns = newData.columns.get_level_values(0) #needed to avoid formatting issues
 
                 self.stockFiler.appendStockData(stock.getName(), stock.updateData(newData))
                     
@@ -44,6 +46,8 @@ class StockManager():
         if not any(stock.getName() == stockName for stock in self.stocks):
             
             stockData = yf.download(stockName, period='max', interval='1d', auto_adjust=False)
+            if isinstance(stockData.columns, pd.MultiIndex):
+                stockData.columns = stockData.columns.get_level_values(0) #needed to avoid formatting issues
 
             if stockData.empty:
                 print(f"Stock {stockName} not found.")
@@ -51,3 +55,17 @@ class StockManager():
 
             self.stockFiler.addStockFile(stockName, stockData)
             self.stocks.append(Stock.Stock(stockName, stockData))
+        else:
+            print(f"Stock {stockName} already exists in data base.")
+
+
+    def getStock(self, name):
+
+        for stock in self.stocks:
+            if stock.getName() == name:
+                return stock
+        return None
+
+
+    def getStockNames(self):
+        return [stock.getName() for stock in self.stocks]

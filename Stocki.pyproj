@@ -28,6 +28,8 @@
     <Compile Include="model\StockFiles.py" />
     <Compile Include="model\StockManager.py" />
     <Compile Include="model\__init__.py" />
+    <Compile Include="view\MainFrame.py" />
+    <Compile Include="view\__init__.py" />
     <Compile Include="__init__.py" />
     <Compile Include="plotXY.py" />
     <Compile Include="stockList.py" />
@@ -47,6 +49,12 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="model\" />
+    <Folder Include="controller\" />
+    <Folder Include="view\" />
+    <Folder Include="view\assets\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="view\assets\mainFrameStyle.css" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
