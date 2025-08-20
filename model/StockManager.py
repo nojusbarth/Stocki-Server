@@ -38,6 +38,8 @@ class StockManager():
                     newData.columns = newData.columns.get_level_values(0) #needed to avoid formatting issues
 
                 self.stockFiler.appendStockData(stock.getName(), stock.updateData(newData))
+            else:
+                print(f"stock {stock.getName()} is up to date")
                     
 
 

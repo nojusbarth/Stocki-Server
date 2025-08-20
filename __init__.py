@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk
+from controller.modelManager import ModelManager
 from model import Stock, StockManager
 from view import MainFrame
 from windowMng import *
@@ -22,7 +23,9 @@ if __name__ == "__main__":
 
     stockManager = StockManager.StockManager()
 
+    modelManager = ModelManager(stockManager)
 
-    frame = MainFrame.MainFrame(stockManager=stockManager)
-    frame.run()
+
+    #frame = MainFrame.MainFrame(stockManager=stockManager)
+    #frame.run()
 

@@ -22,6 +22,11 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="control\DataPreparer.py" />
+    <Compile Include="control\ModelEvaluator.py" />
+    <Compile Include="control\ModelManager.py" />
+    <Compile Include="control\ModelTrainer.py" />
+    <Compile Include="control\__init__.py" />
     <Compile Include="drbLayout.py" />
     <Compile Include="lineFit.py" />
     <Compile Include="model\Stock.py" />
@@ -49,7 +54,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="model\" />
-    <Folder Include="controller\" />
+    <Folder Include="control\" />
     <Folder Include="view\" />
     <Folder Include="view\assets\" />
   </ItemGroup>
