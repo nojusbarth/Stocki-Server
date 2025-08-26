@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk
-from controller.modelManager import ModelManager
+from control.ModelManager import ModelManager
 from model import Stock, StockManager
 from view import MainFrame
 from windowMng import *
@@ -25,6 +25,9 @@ if __name__ == "__main__":
 
     modelManager = ModelManager(stockManager)
 
+    modelManager.predict(3, showPlot=True)
+
+    input("Press Enter to exit...")
 
     #frame = MainFrame.MainFrame(stockManager=stockManager)
     #frame.run()

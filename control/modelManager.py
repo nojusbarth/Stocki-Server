@@ -1,5 +1,5 @@
 import pandas as pd
-from controller import DataPreparer, ModelTrainer, ModelEvaluator
+from control import DataPreparer, ModelTrainer, ModelEvaluator
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
@@ -20,46 +20,59 @@ class ModelManager():
         stock = stockManager.getStock("AAPL")
 
 
-        data = stock.getData()['Close'].copy()
+        data = stock.getData().copy()
 
-        scaled_data = self.dataPreparer.prepareSamples(data, numLastSamples=365*2)
-
+        dataX, dataY = self.dataPreparer.prepareFeatures(data, numSampes=365*2)
+        dataX = self.dataPreparer.scaleTranform(dataX, fit=True)
         trainTestSplit = 0.8
-        timeStep = 20
 
 
-        Xtrain, Ytrain, Xvalid, Yvalid = self.dataPreparer.createSplit(scaled_data, trainTestSplit, timeStep)
+        Xtrain, Ytrain, Xtest, Ytest = self.dataPreparer.createSplit(dataX, dataY, trainTestSplit)
 
         # Initialize and train the XGBoost model
-        xgb_model = XGBRegressor(objective ='reg:squarederror', colsample_bytree = 0.3, learning_rate = 0.1, max_depth = 5, alpha = 10, n_estimators = 100)
+        self.xgb_model = XGBRegressor(objective ='reg:squarederror', colsample_bytree = 0.3, learning_rate = 0.1, max_depth = 5, n_estimators = 200)
 
-        xgb_model = self.modelTrainer.trainModel(xgb_model, Xtrain, Ytrain)
+        self.xgb_model = self.modelTrainer.trainModel(self.xgb_model, Xtrain, Ytrain)
         
-        # Predict future prices
-        future_prices = []
+
+        #self.modelEvaluator.evaluateModel(self.xgb_model, Xtest, Ytest, showPlot=True)
+
+
+    #WARNING XGBOOST AND HEURISTICS TO PREDICT NEXT DAY's DATA ARE ONLY RELIABE FOR 1-3 DAYS AHEAD
+    def predict(self, days, showPlot= False):
         
-        # Get the last 60 days of data
-        last_60_days = scaled_data[-timeStep:].reshape(1, -1)
+        predictedPrices = []
+        stock = self.stockManager.getStock("AAPL")
+
+        # prediction requires 34 days of data to create features (32 needed for surviving nand, 1 because of shifting
+        # (shifting only needed in training))
+        # WARNING: Ensure that the last 34 days werent used in training!
         
-        for i in range(10):
-            pred_price = xgb_model.predict(last_60_days)
-            future_prices.append(pred_price[0])
-            last_60_days = np.append(last_60_days, pred_price.reshape(1, -1), axis=1)[:, 1:]
-        
-        # Inverse transform the predicted prices
-        future_prices = self.dataPreparer.inverseTransform(future_prices)
+        data = stock.getData().tail(34).copy()
 
+        for i in range(days):
 
-        plt.plot(data.index[-100:], data.tail(100), label='Historical Prices')
-        plt.plot(pd.date_range(data.index[-1], periods=10), future_prices, linestyle='dashed', color='red', label='Future Predictions')
-        plt.title('Stock Price Prediction for Next 10 Days using XGBoost')
-        plt.xlabel('Date')
-        plt.ylabel('Close Price (USD)')
-        plt.legend()
-        plt.show()
+            #y not needed for prediction
+            Xdata, _ = self.dataPreparer.prepareFeatures(data)
+            Xdata = self.dataPreparer.scaleTranform(Xdata)
+            
 
-        self.modelEvaluator.evaluateModel(xgb_model, Xvalid, Yvalid, self.dataPreparer.scaler, showPlot=True)
+            nextDayPred = self.xgb_model.predict(Xdata[-1].reshape(1, -1))[0]
+            predictedPrices.append(nextDayPred)
+            
+            data = pd.concat([data, self.dataPreparer.createNextDayFeatures(data, nextDayPred)])
 
-        input("Press Enter to exit...")
+        if showPlot:
 
+            allData = stock.getData()['Close'].copy()
+
+            plt.plot(allData.index[-100:], allData.tail(100), label='Historical Prices')
+            plt.plot(pd.date_range(allData.index[-1], periods=days), predictedPrices, linestyle='dashed', color='red', label='Future Predictions')
+            plt.title(f"Stock Price Prediction for Next {days} Days using XGBoost")
+            plt.xlabel('Date')
+            plt.ylabel('Close Price (USD)')
+            plt.legend()
+            plt.show()
+
+        return predictedPrices
 
