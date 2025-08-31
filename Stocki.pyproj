@@ -23,7 +23,10 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="control\DataPreparer.py" />
+    <Compile Include="control\HyperTuner.py" />
+    <Compile Include="control\Model.py" />
     <Compile Include="control\ModelEvaluator.py" />
+    <Compile Include="control\ModelFiles.py" />
     <Compile Include="control\ModelManager.py" />
     <Compile Include="control\ModelTrainer.py" />
     <Compile Include="control\__init__.py" />

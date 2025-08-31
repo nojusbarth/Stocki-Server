@@ -10,13 +10,13 @@ class ModelEvaluator():
         pass
 
 
-    def evaluateModel(self, model, X_valid, y_valid, showPlot=False):
+    def evaluateModel(self, model, testX, testY, showPlot=False):
 
-        yPred = model.predict(X_valid)
+        yPred = model.predict(testX)
 
-        rmse = np.sqrt(mean_squared_error(y_valid, yPred))
-        mae  = mean_absolute_error(y_valid, yPred)
-        r2   = r2_score(y_valid, yPred)
+        rmse = np.sqrt(mean_squared_error(testY, yPred))
+        mae  = mean_absolute_error(testY, yPred)
+        r2   = r2_score(testY, yPred)
 
 
         print(f"model evaluation results:")
@@ -25,7 +25,7 @@ class ModelEvaluator():
         print("R squared:", r2)
 
         if showPlot:
-            self.showPlot(y_valid, yPred)
+            self.showPlot(testY, yPred)
 
 
 

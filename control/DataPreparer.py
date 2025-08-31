@@ -5,7 +5,6 @@ from sklearn.preprocessing import MinMaxScaler
 class DataPreparer():
 
     def __init__(self):
-        self.scaler = MinMaxScaler()
         self.features = ["Open", "High", "Low", "Close", "Volume",
             "Return", "Volatility", "High_Low", "Close_Open",
             "SMA_10", "SMA_30", "Volume_Change"]
@@ -36,21 +35,12 @@ class DataPreparer():
         return X, y
 
 
-    def scaleTranform(self, data, fit=False):
-        if not fit:
-            return self.scaler.transform(data)
-        else:
-            return self.scaler.fit_transform(data)
-
-
-    def inverseTransform(self, data):
-        return self.scaler.inverse_transform(np.array(data).reshape(-1, 1))
 
 
 
 
-    def createSplit(self, X, y, trainTestSplit,):
 
+    def createSplit(self, X, y, trainTestSplit):
         trainingWindow = int(len(X) * trainTestSplit)
 
         trainX = X[:trainingWindow]
@@ -64,7 +54,6 @@ class DataPreparer():
 
     
     def createNextDayFeatures(self, lastData, closePrediction):
-
 
         nextDate = lastData.index[-1] + pd.Timedelta(days=1)
 

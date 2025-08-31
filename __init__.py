@@ -25,7 +25,9 @@ if __name__ == "__main__":
 
     modelManager = ModelManager(stockManager)
 
-    modelManager.predict(3, showPlot=True)
+    #modelManager.createNewModel("AAPL", "XGBOOSTV3", hyperTune=False, showStats=True)
+
+    modelManager.predict(10,showPlot=True)
 
     input("Press Enter to exit...")
 
