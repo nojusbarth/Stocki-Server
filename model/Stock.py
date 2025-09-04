@@ -29,6 +29,11 @@ class Stock():
         return toAdd
 
 
+    #WARNING, METHOD ONLY USED IN CASE OF A HOLIDAY OR WEEKEND, WHERE NO STOCK DATA IS AVAILABLE TO STOP UPDATE POLLING
+    def forceUpdateTime(self, time):
+        self.latestUpdate = time
+
+
     def getName(self):
         return self.name
 

@@ -23,18 +23,23 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="control\DataPreparer.py" />
-    <Compile Include="control\HyperTuner.py" />
-    <Compile Include="control\Model.py" />
-    <Compile Include="control\ModelEvaluator.py" />
+    <Compile Include="control\model_core\HyperTuner.py" />
+    <Compile Include="control\model_core\Model.py" />
+    <Compile Include="control\model_core\ModelEvaluator.py" />
     <Compile Include="control\ModelFiles.py" />
     <Compile Include="control\ModelManager.py" />
-    <Compile Include="control\ModelTrainer.py" />
+    <Compile Include="control\model_core\ModelInfo.py" />
+    <Compile Include="control\model_core\ModelTrainer.py" />
+    <Compile Include="control\model_core\ModelMaker.py" />
+    <Compile Include="control\model_core\__init__.py" />
+    <Compile Include="control\Predictor.py" />
     <Compile Include="control\__init__.py" />
     <Compile Include="drbLayout.py" />
     <Compile Include="lineFit.py" />
     <Compile Include="model\Stock.py" />
     <Compile Include="model\StockFiles.py" />
     <Compile Include="model\StockManager.py" />
+    <Compile Include="model\StockUpdateInfo.py" />
     <Compile Include="model\__init__.py" />
     <Compile Include="view\MainFrame.py" />
     <Compile Include="view\__init__.py" />
@@ -56,6 +61,7 @@
     </Interpreter>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="control\model_core\" />
     <Folder Include="model\" />
     <Folder Include="control\" />
     <Folder Include="view\" />

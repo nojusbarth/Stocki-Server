@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
 
 class DataPreparer():
 
@@ -9,6 +8,8 @@ class DataPreparer():
             "Return", "Volatility", "High_Low", "Close_Open",
             "SMA_10", "SMA_30", "Volume_Change"]
 
+    def getFeaturesNames(self):
+        return self.features
 
     #WARNING: data should be copied before passing to this function
     def prepareFeatures(self, data, numSampes=None):
@@ -33,11 +34,6 @@ class DataPreparer():
         X = X[:-1] #cut last line to match y length
 
         return X, y
-
-
-
-
-
 
 
     def createSplit(self, X, y, trainTestSplit):
