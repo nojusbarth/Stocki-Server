@@ -1,4 +1,5 @@
-from control import DataPreparer, ModelManager
+from control import DataPreparer
+from control import ModelManager
 
 import pandas as pd
 import numpy as np
@@ -33,12 +34,25 @@ class Predictor():
             return None
 
 
-        predictedPrices = self.doPrediction(stock.getData(), days)
+        predictedReturns = self.doPrediction(stock.getData(), days)
+
+
 
         if showPlot:
+            lastClose = stock.getData()["Close"].iloc[-1]
+            
+            predictedPrices = []
+            currentPrice = lastClose
+            for r in predictedReturns:
+                currentPrice = currentPrice * (1 + r)
+                predictedPrices.append(currentPrice)
+            
+            predictedPrices = np.array(predictedPrices)
+
+
             self.showPlot(stock.getData(), days, predictedPrices)
 
-        return predictedPrices
+        return predictedReturns
 
     
     #PRIVATE FUNCTION
@@ -55,7 +69,7 @@ class Predictor():
         for i in range(days):
 
             #y not needed for prediction
-            Xdata, _ = self.dataPreparer.prepareFeatures(data)        
+            Xdata, _ = self.dataPreparer.prepareFeatures(data)
 
             nextDayPred = self.model.predict(Xdata[-1].reshape(1, -1))[0]
             predictedPrices.append(nextDayPred)

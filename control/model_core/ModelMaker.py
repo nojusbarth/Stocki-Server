@@ -34,7 +34,9 @@ class ModelMaker:
         model = self.modelTrainer.trainModel(model, Xtrain, Ytrain)
         latestTrain = data.index[(len(data) - len(Xtest))-1].strftime("%Y-%m-%d")
 
-        metrics = self.getMetrics(model, Xtest, Ytest, showStats)
+        testCloses = data["Close"].iloc[-len(Xtest)-1:-1].values
+
+        metrics = self.getMetrics(model, Xtest, Ytest, testCloses, showStats)
 
         model.addInfo(self.createInfo(hyperParams, metrics, latestTrain))
 
@@ -43,13 +45,13 @@ class ModelMaker:
 
 
     #PRIVATE FUNCTION
-    def getMetrics(self, model, Xtest, Ytest, showStats):
+    def getMetrics(self, model, Xtest, Ytest, testClose, showStats):
         metrics = None
 
         if showStats:
-            metrics = self.modelEvaluator.evaluateModel(model, Xtest, Ytest, showPlot=True)
+            metrics = self.modelEvaluator.evaluateModel(model, Xtest, Ytest, testClose, showPlot=True)
         else:
-            metrics = self.modelEvaluator.evaluateModel(model, Xtest, Ytest, showPlot=False)
+            metrics = self.modelEvaluator.evaluateModel(model, Xtest, Ytest, testClose, showPlot=False)
 
         return metrics
 

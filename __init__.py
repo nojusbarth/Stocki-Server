@@ -9,6 +9,26 @@ from model import Stock, StockManager
 from view import MainFrame
 from windowMng import *
 
+
+def updateLoop(stockManager, modelManager):
+    #update loop
+
+    stockManager.updateStocks()
+    updateInfos = stockManager.getLatestUpdateInfo()
+    for updateInfo in updateInfos:
+        if modelManager.isModelUpdated(updateInfo):
+            print(f"Model for stock {updateInfo.stockName} is up to date")
+        else:
+            #create new model with up to date data
+
+            stock = stockManager.getStock(updateInfo.stockName)
+            if stock is not None:
+                print(f"Creating new model for stock {updateInfo.stockName}")
+                modelManager.createNewModel(updateInfo.stockName, stock.getData(), hyperTune=False, showStats=True)
+            else:
+                print(f"Stock {updateInfo.stockName} not found in stock manager")
+
+
 #
 if __name__ == "__main__":
     
@@ -27,31 +47,17 @@ if __name__ == "__main__":
     stockManager = StockManager.StockManager()
     modelManager = ModelManager()
 
-    #update loop
-
-    stockManager.updateStocks()
-    updateInfos = stockManager.getLatestUpdateInfo()
-    for updateInfo in updateInfos:
-        if modelManager.isModelUpdated(updateInfo):
-            print(f"Model for stock {updateInfo.stockName} is up to date")
-        else:
-            #create new model with up to date data
-
-            stock = stockManager.getStock(updateInfo.stockName)
-            if stock is not None:
-                print(f"Creating new model for stock {updateInfo.stockName}")
-                modelManager.createNewModel(updateInfo.stockName, stock.getData(), hyperTune=False, showStats=True)
-            else:
-                print(f"Stock {updateInfo.stockName} not found in stock manager")
-
     
-    predictor = Predictor.Predictor(modelManager, stockManager)
+    updateLoop(stockManager=stockManager, modelManager=modelManager);
+    
 
+    pred = Predictor.Predictor(modelManager, stockManager)
 
+    pred.predict("GOOGL", 3, showPlot=True)
+    pred.predict("AAPL", 3, showPlot=True)
 
     input("Press Enter to exit...")
 
     #frame = MainFrame.MainFrame(stockManager=stockManager)
     #frame.run()
 
-    #todo: wieso ist test bei apple schon wieder alt und nicht neu? Was ist da los

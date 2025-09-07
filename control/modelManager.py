@@ -12,7 +12,7 @@ from control import ModelFiles
 from control.model_core import ModelMaker
 
 
-class ModelManager():
+class ModelManager:
 
     def __init__(self):
         self.modelFiler = ModelFiles.ModelFiles(Path(r"C:\Users\nojob\Programmieren\Visual Studio\python\Stocki\project\predictionModels"))

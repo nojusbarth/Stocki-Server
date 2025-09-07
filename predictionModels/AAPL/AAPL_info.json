@@ -1,24 +1,22 @@
 {
-    "latestUpdate": "2025-09-04",
-    "trainUntil": "2025-02-11",
+    "latestUpdate": "2025-09-07",
+    "trainUntil": "2025-02-13",
     "metrics": {
-        "RMSE": 5.246613877429673,
-        "MAE": 3.603929792131699,
-        "R2": 0.8799058045883913
+        "RMSE": 4.924617882479219,
+        "MAE": 3.0906090954062906,
+        "R2": 0.8944118767316377
     },
     "features": [
-        "Open",
-        "High",
-        "Low",
-        "Close",
-        "Volume",
         "Return",
         "Volatility",
         "High_Low",
         "Close_Open",
         "SMA_10",
         "SMA_30",
-        "Volume_Change"
+        "Volume_Change",
+        "Rolling_Vol_10",
+        "Momentum_5",
+        "Momentum_10"
     ],
     "hyperParameters": {
         "objective": "reg:squarederror",
