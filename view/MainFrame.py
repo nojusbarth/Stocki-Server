@@ -1,17 +1,25 @@
 from dash import Dash, html, dcc
+import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 import plotly.express as px
+import pandas as pd
+import numpy as np
 
 from model.Stock import Stock
+from control import ModelManager
+from control import Predictor
 
 
 class MainFrame:
 
-    def __init__(self, stockManager):
+    def __init__(self, stockManager, modelManager):
 
         self.app = Dash(__name__)
         self.stockManager = stockManager
-        self.currentStock = stockManager.getStock("AAPL")
+        self.modelManager = modelManager
+        self.predictor = Predictor.Predictor(modelManager=modelManager, stockManager=stockManager)
+        self.currentStock = None
+        self.predictionClose = None
 
         self.app.layout = self.initLayout()
 
@@ -28,21 +36,25 @@ class MainFrame:
             return self.stockManager.getStock(selected_stock).getName()
 
 
-        # Callback: aktualisiert den Graph, wenn eine Aktie ausgewaehlt wird oder Kategorie geaendert wird, oder Tage geaendert werden
+        # Callback: aktualisiert den Graph, wenn eine Aktie ausgewaehlt wird oder Tage geaendert werden
         @self.app.callback(
             Output("main-plot", "figure"),
             Input("search-dropdown", "value"),  # ausgewaehlte Aktie
-            Input("data-column-selector", "value"),  # aktuelle Kategorie
             Input("days-selector", "value"),  # Anzahl der Tage fuer die Anzeige
         )
-        def update_plot_on_search(selected_stock, category, days):
-            if not selected_stock or not category:
+        def update_plot_on_search(selected_stock, days):
+            if not selected_stock:
                 return {}
 
-            self.currentStock = self.stockManager.getStock(selected_stock)
+
+            if self.currentStock is None or self.currentStock.getName() is not selected_stock:
+                self.currentStock = self.stockManager.getStock(selected_stock)
+
+                _ , self.predictionClose = self.predictor.predict(self.currentStock.getName(),3)
 
 
-            return self.createPlot(self.currentStock.getData(), selected_stock, category, days)
+
+            return self.createPlot(self.currentStock.getData(), selected_stock, days)
 
 
 
@@ -85,7 +97,7 @@ class MainFrame:
                         html.Div(
                             className="plot-title",
                             children=[
-                                html.Span(self.currentStock.getName(), id="stock-title")
+                                html.Span("", id="stock-title")
                             ],
                         ),
                         dcc.Graph(id="main-plot"),
@@ -96,20 +108,6 @@ class MainFrame:
                 html.Div(
                     className="plot-data-row",
                     children=[
-                        html.Div(
-                            className="data-dropdown-container",
-                            children=[
-                                dcc.Dropdown(
-                                    id="data-column-selector",
-                                    options=[
-                                        {"label": col, "value": col}
-                                        for col in self.currentStock.getData().columns
-                                    ],
-                                    value="Close",
-                                    clearable=False,
-                                )
-                            ],
-                        ),
                         html.Div(
                             className="days-dropdown-container",
                             children=[
@@ -134,44 +132,69 @@ class MainFrame:
         )
 
 
-    def createPlot(self, data, stockName, category, days):
+    def createPlot(self, data, stockName, days):
+
+    
         x = data.index.tolist()
-        y = data[category]
-        
-        fig = px.line(
+        y = data["Close"]
+
+
+
+    
+        fig = go.Figure()
+    
+        # 1. Historische Werte (schwarz)
+        fig.add_trace(go.Scatter(
             x=x,
             y=y,
-            labels={"x": "Zeit", "y": category},
-            title=f"{category} von {stockName} ueber Zeit",
-        )
-        
+            mode="lines",
+            name="Historisch",
+            line=dict(color="black")
+        ))
+    
+        x_pred = pd.date_range(start=x[-1], periods=len(self.predictionClose)+1, freq="D")
+        y_pred = np.concatenate([[y.iloc[-1]], self.predictionClose])
 
-        # Globale Grenzen (nicht ueberschreitbar)
-        x_min, x_max = x[0], x[-1]
-        y_min, y_max = y.min(), y.max()
+        fig.add_trace(go.Scatter(
+            x=x_pred,
+            y=y_pred,
+            mode="lines",
+            name="Vorhersage",
+            line=dict(color="red", dash="dash")
+        ))
+    
+        # Globale Grenzen
 
-        # Initialer Zoom basierend auf 'days'
+        x_max = x_pred[-1]
+        y_min = min(y.min(), y_pred.min())
+        y_max = max(y.max(), y_pred.max())
+
+    
+        x_min = x[0]
+    
+        # Initialer Zoom
         if days is not None and days != "all":
             x_start = x[-days] if len(x) >= days else x_min
         else:
             x_start = x_min
-
+    
         fig.update_layout(
-            dragmode='pan',
-
+            title=f"Close von {stockName} ueber Zeit",
             xaxis=dict(
-                range=[x_start, x_max],    # aktueller sichtbarer Bereich
-                minallowed=x_min,          # links nicht weiter verschieben
-                maxallowed=x_max,          # rechts nicht weiter verschieben
+                range=[x_start, x_max],
+                minallowed=x_min,
+                maxallowed=x_max
             ),
             yaxis=dict(
                 range=[y_min, y_max],
                 minallowed=y_min,
                 maxallowed=y_max
-            )
+            ),
+            dragmode="pan"
         )
-
+    
         return fig
+    
 
 
 

@@ -78,13 +78,4 @@
     font-size: 14px;
 }
 
-/* Container fuer die Daten-Dropdown */
-.data-dropdown-container {
-    width: 250px; /* feste Breite fuer Dropdown */
-}
-
-/* DataDropdown selbst */
-#data-column-selector {
-    font-size: 14px;
-}
 

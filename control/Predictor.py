@@ -36,23 +36,20 @@ class Predictor():
 
         predictedReturns = self.doPrediction(stock.getData(), days)
 
-
+        lastClose = stock.getData()["Close"].iloc[-1]
+        
+        predictedPrices = []
+        currentPrice = lastClose
+        for r in predictedReturns:
+            currentPrice = currentPrice * (1 + r)
+            predictedPrices.append(currentPrice)
+        
+        predictedPrices = np.array(predictedPrices)
 
         if showPlot:
-            lastClose = stock.getData()["Close"].iloc[-1]
-            
-            predictedPrices = []
-            currentPrice = lastClose
-            for r in predictedReturns:
-                currentPrice = currentPrice * (1 + r)
-                predictedPrices.append(currentPrice)
-            
-            predictedPrices = np.array(predictedPrices)
-
-
             self.showPlot(stock.getData(), days, predictedPrices)
 
-        return predictedReturns
+        return predictedReturns, predictedPrices
 
     
     #PRIVATE FUNCTION

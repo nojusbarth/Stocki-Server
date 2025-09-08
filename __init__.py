@@ -47,17 +47,11 @@ if __name__ == "__main__":
     stockManager = StockManager.StockManager()
     modelManager = ModelManager()
 
-    
+
     updateLoop(stockManager=stockManager, modelManager=modelManager);
     
 
-    pred = Predictor.Predictor(modelManager, stockManager)
-
-    pred.predict("GOOGL", 3, showPlot=True)
-    pred.predict("AAPL", 3, showPlot=True)
+    frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)
+    frame.run()
 
     input("Press Enter to exit...")
-
-    #frame = MainFrame.MainFrame(stockManager=stockManager)
-    #frame.run()
-
