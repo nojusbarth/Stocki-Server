@@ -1,11 +1,11 @@
-from control import DataPreparer
-from control import ModelManager
+from ml import DataPreparer
+from ml import ModelManager
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from model import StockManager
+from data import StockManager
 
 class Predictor():
 

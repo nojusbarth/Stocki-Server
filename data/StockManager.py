@@ -1,8 +1,8 @@
 
 import pandas as pd
-from model import StockFiles, StockUpdateInfo
+from data import StockFiles, StockUpdateInfo
 import yfinance as yf
-from model import Stock
+from data import Stock
 from pathlib import Path
 
 #Manages stock data

@@ -2,10 +2,10 @@
 
 import tkinter as tk
 from tkinter import ttk
-from control import Predictor
-from control.ModelManager import ModelManager
-from control.model_core import ModelEvaluator
-from model import Stock, StockManager
+from ml import Predictor
+from ml.ModelManager import ModelManager
+from ml.model_core import ModelEvaluator
+from data import Stock, StockManager
 from view import MainFrame
 from windowMng import *
 

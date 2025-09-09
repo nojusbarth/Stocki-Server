@@ -1,9 +1,9 @@
-from control import DataPreparer
-from control.model_core import ModelInfo
-from control.model_core import ModelTrainer
-from control.model_core import ModelEvaluator
-from control.model_core import HyperTuner
-from control.model_core import Model
+from ml import DataPreparer
+from ml.model_core import ModelInfo
+from ml.model_core import ModelTrainer
+from ml.model_core import ModelEvaluator
+from ml.model_core import HyperTuner
+from ml.model_core import Model
 
 
 from xgboost import XGBRegressor

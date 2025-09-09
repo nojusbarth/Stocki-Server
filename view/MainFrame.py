@@ -5,9 +5,9 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 
-from model.Stock import Stock
-from control import ModelManager
-from control import Predictor
+from data.Stock import Stock
+from ml import ModelManager
+from ml import Predictor
 
 
 class MainFrame:

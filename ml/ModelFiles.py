@@ -1,7 +1,7 @@
 from xgboost import XGBRegressor
 import os
-from control.model_core import Model
-from control.model_core import ModelInfo
+from ml.model_core import Model
+from ml.model_core import ModelInfo
 from joblib import dump, load
 import json
 from dataclasses import asdict

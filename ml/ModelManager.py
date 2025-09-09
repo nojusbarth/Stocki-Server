@@ -6,10 +6,10 @@ from xgboost import XGBRegressor
 from datetime import datetime, timedelta
 from sklearn.metrics import mean_squared_error
 from pathlib import Path
-from control import DataPreparer
-from control import ModelFiles
+from ml import DataPreparer
+from ml import ModelFiles
 
-from control.model_core import ModelMaker
+from ml.model_core import ModelMaker
 
 
 class ModelManager:
