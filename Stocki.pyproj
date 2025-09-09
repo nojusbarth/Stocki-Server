@@ -23,7 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="data\Stock.py" />
-    <Compile Include="data\StockFiles.py" />
+    <Compile Include="data\StockDB.py" />
     <Compile Include="data\StockManager.py" />
     <Compile Include="data\StockUpdateInfo.py" />
     <Compile Include="data\__init__.py" />

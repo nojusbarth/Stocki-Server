@@ -16,9 +16,7 @@ def updateLoop(stockManager, modelManager):
     stockManager.updateStocks()
     updateInfos = stockManager.getLatestUpdateInfo()
     for updateInfo in updateInfos:
-        if modelManager.isModelUpdated(updateInfo):
-            print(f"Model for stock {updateInfo.stockName} is up to date")
-        else:
+        if not modelManager.isModelUpdated(updateInfo):
             #create new model with up to date data
 
             stock = stockManager.getStock(updateInfo.stockName)

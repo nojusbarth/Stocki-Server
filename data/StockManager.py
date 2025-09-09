@@ -1,6 +1,6 @@
 
 import pandas as pd
-from data import StockFiles, StockUpdateInfo
+from data import StockDB, StockUpdateInfo
 import yfinance as yf
 from data import Stock
 from pathlib import Path
@@ -10,8 +10,8 @@ from pathlib import Path
 
 class StockManager():
 
-    def __init__(self, filePath=r"C:\Users\nojob\Programmieren\Visual Studio\python\Stocki\project\financedata"):
-        self.stockFiler = StockFiles.StockFiles(Path(filePath))
+    def __init__(self):
+        self.stockDB = StockDB.StockDB()
         self.stocks = []
         #when adding a new stock, this is the earliest date to fetch from
         self.latestFetchPoint = "2020-01-01"
@@ -22,37 +22,42 @@ class StockManager():
         
 
     def loadStocks(self):
-        for stockName, stockData in self.stockFiler.fetchData().items():
+        for stockName, stockData in self.stockDB.fetchData().items():
             self.stocks.append(Stock.Stock(stockName, stockData))
 
 
     #minimum update interval is 1 day,
     # jfinance returns no data on weekends and holidays, which needs to be considered when updating
     def updateStocks(self):
-        
+
         currentDate = pd.Timestamp.now()
 
-        for stock in self.stocks:
-            #only update if the stock data is older than 1 day
-            if(abs(stock.getLatestUpdateTime() - currentDate) >= pd.Timedelta(days=1)):
-                print(f"Updating stock: {stock.getName()}")
-                
-                #auto adjust false is very important otherwise adj close will not be garanteed to be in dataframe 
-                newData = yf.download(stock.getName(), start=stock.getLatestUpdateTime(), end=currentDate, interval='1d', auto_adjust=True)
-                if isinstance(newData.columns, pd.MultiIndex):
-                    newData.columns = newData.columns.get_level_values(0) #needed to avoid formatting issues
+        stocksToUpdate = [
+            stock for stock in self.stocks
+            if abs(self.stockDB.getLatestUpdateTime(stock.getName()) - currentDate) >= pd.Timedelta(days=1)
+        ]
+            
+        for stock in stocksToUpdate:
+            print(f"Updating stock: {stock.getName()}")
+            
+            #auto adjust false is very important otherwise adj close will not be garanteed to be in dataframe 
+            newData = yf.download(stock.getName(), 
+                                  start=self.stockDB.getLatestUpdateTime(stock.getName()), 
+                                  end=currentDate, 
+                                  interval='1d', 
+                                  auto_adjust=True)
+            
 
-                relevantData = stock.updateData(newData)
+            if isinstance(newData.columns, pd.MultiIndex):
+                newData.columns = newData.columns.get_level_values(0) #needed to avoid formatting issues
 
-                if not relevantData.empty:
-                    self.stockFiler.appendStockData(stock.getName(), relevantData)
-                    print(f"stock {stock.getName()} updated with {len(relevantData)} new rows")
-                else:
-                    stock.forceUpdateTime(currentDate)
-            else:
-                print(f"stock {stock.getName()} is up to date")
-                    
+            
+            addedRows = self.stockDB.addStockData(stock.getName(), newData)
 
+            if addedRows > 0:
+                self.stocks[stock.getName()] = self.stockDB.fetchData(stock.getName())
+
+            print(f"Updated stock: {stock.getName()}")
 
 
     def addStock(self, stockName):
@@ -66,7 +71,7 @@ class StockManager():
                 print(f"Stock {stockName} not found.")
                 return
 
-            self.stockFiler.addStockFile(stockName, stockData)
+            self.stockDB.addStockData(stockName, stockData)
             self.stocks.append(Stock.Stock(stockName, stockData))
         else:
             print(f"Stock {stockName} already exists in data base.")
@@ -85,14 +90,13 @@ class StockManager():
         latestUpdateInfo = []
         for stock in self.stocks:
             latestUpdateInfo.append(StockUpdateInfo.StockUpdateInfo(stockName=stock.getName(), 
-                                                                    latestUpdateTime=stock.getLatestUpdateTime().strftime("%Y-%m-%d")))
+                                                                    latestUpdateTime=self.stockDB.getLatestUpdateTime(stock.getName()).strftime("%Y-%m-%d")))
 
         return latestUpdateInfo
 
 
     def getStockNames(self):
         return [stock.getName() for stock in self.stocks]
-
 
 
     
