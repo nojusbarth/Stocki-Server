@@ -1,4 +1,5 @@
-from ml import DataPreparer
+from datetime import timedelta
+from ml import DataPreparer, PredictionPacket
 from ml import ModelManager
 
 import pandas as pd
@@ -40,22 +41,25 @@ class Predictor():
         
         predictedPrices = []
         currentPrice = lastClose
+
         for r in predictedReturns:
             currentPrice = currentPrice * (1 + r)
-            predictedPrices.append(currentPrice)
+            predictedPrices.append(currentPrice)           
         
         predictedPrices = np.array(predictedPrices)
+
 
         if showPlot:
             self.showPlot(stock.getData(), days, predictedPrices)
 
-        return predictedReturns, predictedPrices
+        return self.buildPackets(startDate = stock.getData().index[-1], returns=predictedReturns, closes=predictedPrices)
+
 
     
     #PRIVATE FUNCTION
     def doPrediction(self, stockData, days):
 
-        predictedPrices = []
+        predictedReturns = []
 
         # prediction requires 34 days of data to create features (32 needed for surviving nand, 1 because of shifting
         # (shifting only needed in training))
@@ -69,11 +73,11 @@ class Predictor():
             Xdata, _ = self.dataPreparer.prepareFeatures(data)
 
             nextDayPred = self.model.predict(Xdata[-1].reshape(1, -1))[0]
-            predictedPrices.append(nextDayPred)
+            predictedReturns.append(nextDayPred)
             
             data = pd.concat([data, self.dataPreparer.createNextDayFeatures(data, nextDayPred)])
 
-        return predictedPrices
+        return predictedReturns
 
     #PRIVATE FUNCTION
     def showPlot(self, stockData, days, predictedPrices):
@@ -86,3 +90,19 @@ class Predictor():
         plt.ylabel('Close Price (USD)')
         plt.legend()
         plt.show()
+
+
+    def buildPackets(self, startDate, returns, closes):
+
+        predictionPackets=[]
+
+        for r, c in zip(returns, closes):
+            startDate += timedelta(days=1)
+            packet = PredictionPacket.PredictionPacket(
+                date=startDate.strftime("%Y-%m-%d"),
+                closePrediction=c,
+                pctReturn=r*100 #in percent
+            )
+            predictionPackets.append(packet)
+
+        return predictionPackets

@@ -50,7 +50,13 @@ class MainFrame:
             if self.currentStock is None or self.currentStock.getName() is not selected_stock:
                 self.currentStock = self.stockManager.getStock(selected_stock)
 
-                _ , self.predictionClose = self.predictor.predict(self.currentStock.getName(),3)
+                packets = self.predictor.predict(self.currentStock.getName(),3)
+
+                predictedCloses = []
+
+                for packet in packets:
+                    predictedCloses.append(packet.closePrediction)
+                self.predictionClose = predictedCloses
 
 
 
