@@ -1,0 +1,90 @@
+import pandas as pd
+import os
+import sqlite3
+
+from data.database import StockReader, StockWriter, TransformerDB
+
+
+class StockDB:
+
+    def __init__(self):
+        self.dbName = "stocks"
+        self.conn = sqlite3.connect(f"{self.dbName}.db", check_same_thread=False)
+        self.cursor = self.conn.cursor()
+
+        self.columnsDB = ["ticker", "date", "open", "high", "low", "close", "volume"]
+        self.columnsDF = ["Open", "High", "Low", "Close", "Volume"]
+
+        self.dbTranformer = TransformerDB.TransformerDB(self.columnsDB, self.columnsDF)
+        self.dbWriter = StockWriter.StockWriter(self.cursor, self.conn)
+        self.dbReader = StockReader.StockReader(self.cursor, self.conn)
+
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stocks_daily (
+            ticker TEXT,
+            date   DATE,
+            open   REAL,
+            high   REAL,
+            low    REAL,
+            close  REAL,
+            volume REAL,
+            PRIMARY KEY (ticker, date)
+        );
+        """)
+
+        self.cursor.execute("""
+        CREATE TABLE IF NOT EXISTS stocks_hourly (
+            ticker TEXT,
+            date   DATETIME,
+            open   REAL,
+            high   REAL,
+            low    REAL,
+            close  REAL,
+            volume REAL,
+            PRIMARY KEY (ticker, date)
+        );
+        """)
+
+        self.conn.commit()
+
+
+    def fetchDataSingle(self, ticker, interval):
+        tickers=[ticker]
+        
+        data = self.dbReader.fetchDataBatch(interval, self.getTableName(interval), tickers=tickers)[ticker]
+
+        return self.dbTranformer.DBtoData(data)
+
+    #dont set tickers if all available data should be fetched
+    def fetchDataBatch(self, interval, tickers=None):
+        
+        dataDict = self.dbReader.fetchDataBatch(interval, self.getTableName(interval), tickers=tickers)
+
+        for key, value in dataDict.items():
+            dataDict[key] = self.dbTranformer.DBtoData(value)
+
+        return dataDict
+
+    def addStockData(self, stockName, stockData, interval):
+        stockData = stockData.copy()
+
+        stockData = self.dbTranformer.dataToDB(stockData, stockName)
+
+        return self.dbWriter.addStockData(stockName, stockData, interval, self.getTableName(interval))
+
+
+    def getLatestUpdateTime(self, ticker, interval):
+        return self.dbReader.getLatestUpdateTime(ticker, self.getTableName(interval))
+
+
+    def getAllTickers(self):
+        return self.dbReader.getAllTickers()
+
+
+    def getTableName(self, interval):
+        if interval == "1d":
+            return "stocks_daily"
+        elif interval == "1h":
+            return "stocks_hourly"
+        else:
+            raise ValueError(f"Unknown interval: {interval}")

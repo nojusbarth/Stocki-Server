@@ -11,6 +11,7 @@ class Server:
         self.stockManager = stockManager
 
         self.app = Flask(__name__)
+        self.setupRoutes()
 
 
 
@@ -19,7 +20,7 @@ class Server:
         def getPrediction(ticker):
             days = int(request.args.get("days", 1)) # default is one
 
-            packets = self.predictor.predict(ticker,days)
+            packets = self.predictor.predict(ticker,days,"1d")
 
             jsonReady = [vars(p) for p in packets]
 
@@ -27,12 +28,12 @@ class Server:
 
 
         @self.app.route("/historical/<ticker>", methods=["GET"])
-        def get_historical(ticker):
+        def getHistorical(ticker):
             
             days = int(request.args.get("days", 30))
 
 
-            data = self.stockManager.getStock(ticker).getData().tail(days)
+            data = self.stockManager.getStockData(ticker, "1d").tail(days)
 
             result = [{"date": index.strftime("%Y-%m-%d"), "close": row["Close"]} 
               for index, row in data.iterrows()]
@@ -40,4 +41,14 @@ class Server:
             
             return jsonify(result)
 
+        @self.app.route("/stocknames", methods=["GET"])
+        def getStockNames():
 
+            stockNamesList = self.stockManager.getStockNames()
+
+            return jsonify(stockNamesList)
+
+
+
+    def start(self):
+        self.app.run(debug=True)

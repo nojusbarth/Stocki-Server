@@ -1,100 +1,116 @@
 
 import pandas as pd
-from data import StockDB, StockUpdateInfo
+from data.database import StockDB
+from data import StockUpdateInfo
 from stockMath import StockMath
 import yfinance as yf
 from data import Stock
 from pathlib import Path
 
-#Manages stock data
-#stock data is stored in a file at given file path
 
 class StockManager():
 
     def __init__(self):
         self.stockDB = StockDB.StockDB()
-        self.stocks: dict[str, Stock.Stock] = {}        
         #when adding a new stock, this is the earliest date to fetch from
-        self.latestFetchPoint = "2020-01-01"
-
-        #load all stocks
-        self.loadStocks()
+        self.latestFetchPointDaily = "2020-01-01"
+        #using period for hourly request because its easier
+        self.fetchPeriodHourly = "60d"
 
         
 
-    def loadStocks(self):
-        for stockName, stockData in self.stockDB.fetchData().items():
-            self.stocks[stockName] = Stock.Stock(stockName, stockData)
+    def updateStocks(self, interval):
 
-
-    #minimum update interval is 1 day,
-    # jfinance returns no data on weekends and holidays, which needs to be considered when updating
-    def updateStocks(self):
-
-        currentDate = pd.Timestamp.now()
-
-        stocksToUpdate = [
-            stock for stock in self.stocks.values()
-            if abs(self.stockDB.getLatestUpdateTime(stock.getName()) - currentDate) >= pd.Timedelta(days=1)
-        ]
-            
-        for stock in stocksToUpdate:
-            print(f"Updating stock: {stock.getName()}")
-            
-            #auto adjust false is very important otherwise adj close will not be garanteed to be in dataframe 
-            newData = yf.download(stock.getName(), 
-                                  start=self.stockDB.getLatestUpdateTime(stock.getName()), 
-                                  end=currentDate, 
-                                  interval='1d', 
-                                  auto_adjust=True)
-            
-
-            if isinstance(newData.columns, pd.MultiIndex):
-                newData.columns = newData.columns.get_level_values(0) #needed to avoid formatting issues
+        currentTime = pd.Timestamp.now()
 
             
-            addedRows = self.stockDB.addStockData(stock.getName(), newData)
+        delta = pd.Timedelta(days=1) if interval == "1d" else pd.Timedelta(hours=1)
+    
+        tickers = self.stockDB.getAllTickers()
+    
+        for ticker in tickers:
+            lastUpdate = self.stockDB.getLatestUpdateTime(ticker, interval=interval)
+    
+            # Prüfen, ob Update nötig ist
+            if abs(currentTime - lastUpdate) >= delta:
+                print(f"Updating [interval={interval}] stock: {ticker}")
+    
+                # Neue Daten von yfinance laden
+                newData = yf.download(
+                    ticker,
+                    start=lastUpdate,
+                    end=currentTime,
+                    interval=interval,
+                    auto_adjust=True
+                )
+    
+                if isinstance(newData.columns, pd.MultiIndex):
+                    newData.columns = newData.columns.get_level_values(0)
+    
+                # In die DB schreiben
+                addedRows = self.stockDB.addStockData(ticker, newData, interval=interval)
+                print(f"Updated {interval} stock: {ticker}, added {addedRows} rows")
 
-            if addedRows > 0:
-                self.stocks[stock.getName()] = Stock.Stock(stock.getName() ,self.stockDB.fetchData(stock.getName()))
-
-            print(f"Updated stock: {stock.getName()}")
 
 
     def addStock(self, stockName):
-        if stockName not in self.stocks:
+        if not stockName in self.stockDB.getAllTickers():
             
-            stockData = yf.download(stockName, start=self.latestFetchPoint, end=pd.Timestamp.now(), interval='1d', auto_adjust=True)
-            if isinstance(stockData.columns, pd.MultiIndex):
-                stockData.columns = stockData.columns.get_level_values(0) #needed to avoid formatting issues
+            stockDataDaily = yf.download(stockName, start=self.latestFetchPointDaily, end=pd.Timestamp.now(), interval='1d', auto_adjust=True)
+            stockDataHourly = yf.download(stockName, interval='1h', auto_adjust=True, period=self.fetchPeriodHourly)
 
-            if stockData.empty:
+            if isinstance(stockDataDaily.columns, pd.MultiIndex):
+                stockDataDaily.columns = stockDataDaily.columns.get_level_values(0) #needed to avoid formatting issues
+
+            if isinstance(stockDataHourly.columns, pd.MultiIndex):
+                stockDataHourly.columns = stockDataHourly.columns.get_level_values(0) #needed to avoid formatting issues
+
+            if stockDataDaily.empty or stockDataHourly.empty:
                 print(f"Stock {stockName} not found.")
                 return
 
-            self.stockDB.addStockData(stockName, stockData)
-            self.stocks[stockName] = Stock.Stock(stockName, stockData)
+            self.stockDB.addStockData(stockName, stockDataDaily, interval='1d')
+            self.stockDB.addStockData(stockName, stockDataHourly, interval='1h')
         else:
             print(f"Stock {stockName} already exists in data base.")
 
 
-    def getStock(self, name):
-
-        return self.stocks[name]
+    def getStockData(self, name, interval):
+        return self.stockDB.fetchDataSingle(name,interval)
 
 
     def getLatestUpdateInfo(self):
-        
-        latestUpdateInfo = []
-        for stock in self.stocks.values():
-            latestUpdateInfo.append(StockUpdateInfo.StockUpdateInfo(stockName=stock.getName(), 
-                                                                    latestUpdateTime=self.stockDB.getLatestUpdateTime(stock.getName()).strftime("%Y-%m-%d")))
+        intervals = ["1d", "1h"]
+        latestUpdateDict = {}
 
-        return latestUpdateInfo
+    
+        for interval in intervals:
+            intervalInfo = []
+    
+            for ticker in self.stockDB.getAllTickers():
+                latestTime = self.stockDB.getLatestUpdateTime(ticker, interval)
+                if latestTime is not None:
+                    if interval == "1d":
+                        timeStr = latestTime.strftime("%Y-%m-%d")
+                    elif interval == "1h":
+                        timeStr = latestTime.strftime("%Y-%m-%d %H")
+                    
+    
+                    intervalInfo.append(
+                        StockUpdateInfo.StockUpdateInfo(
+                            stockName=ticker,
+                            latestUpdateTime=timeStr
+                        )
+                    )
+    
+            latestUpdateDict[interval] = intervalInfo
+    
+        return latestUpdateDict
+
 
 
     def getStockNames(self):
-        return list(self.stocks.keys())
+        return self.stockDB.getAllTickers()
 
 
     

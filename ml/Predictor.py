@@ -19,14 +19,10 @@ class Predictor():
 
 
     #WARNING XGBOOST AND HEURISTICS TO PREDICT NEXT DAY's DATA ARE ONLY RELIABE FOR 1-3 DAYS AHEAD
-    def predict(self, stockName, days, showPlot= False):
+    def predict(self, stockName, days, interval, showPlot= False):
        
-        #check valid input
-        stock = self.stockManager.getStock(stockName)
+        stockData = self.stockManager.getStockData(stockName, interval)
 
-        if stock is None:
-            print(f"Stock {stockName} not found in stock manager.")
-            return None
 
         self.model = self.modelManager.getFittingModel(stockName)
 
@@ -35,9 +31,9 @@ class Predictor():
             return None
 
 
-        predictedReturns = self.doPrediction(stock.getData(), days)
+        predictedReturns = self.doPrediction(stockData, days)
 
-        lastClose = stock.getData()["Close"].iloc[-1]
+        lastClose = stockData["Close"].iloc[-1]
         
         predictedPrices = []
         currentPrice = lastClose
@@ -50,9 +46,9 @@ class Predictor():
 
 
         if showPlot:
-            self.showPlot(stock.getData(), days, predictedPrices)
+            self.showPlot(stockData, days, predictedPrices)
 
-        return self.buildPackets(startDate = stock.getData().index[-1], returns=predictedReturns, closes=predictedPrices)
+        return self.buildPackets(startDate = stockData.index[-1], returns=predictedReturns, closes=predictedPrices)
 
 
     
@@ -100,8 +96,8 @@ class Predictor():
             startDate += timedelta(days=1)
             packet = PredictionPacket.PredictionPacket(
                 date=startDate.strftime("%Y-%m-%d"),
-                closePrediction=c,
-                pctReturn=r*100 #in percent
+                closePrediction=float(c),
+                pctReturn=float(r*100) #in percent
             )
             predictionPackets.append(packet)
 

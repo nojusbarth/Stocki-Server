@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk
+from api.server import Server
 from ml import Predictor
 from ml.ModelManager import ModelManager
 from ml.model_core import ModelEvaluator
@@ -10,19 +11,19 @@ from view import MainFrame
 from windowMng import *
 
 
-def updateLoop(stockManager, modelManager):
+def updateLoop(stockManager, modelManager, interval):
     #update loop
 
-    stockManager.updateStocks()
+    stockManager.updateStocks(interval)
     updateInfos = stockManager.getLatestUpdateInfo()
-    for updateInfo in updateInfos:
+    for updateInfo in updateInfos[interval]:
         if not modelManager.isModelUpdated(updateInfo):
             #create new model with up to date data
 
-            stock = stockManager.getStock(updateInfo.stockName)
-            if stock is not None:
+            stockData = stockManager.getStockData(updateInfo.stockName, interval)
+            if stockData is not None:
                 print(f"Creating new model for stock {updateInfo.stockName}")
-                modelManager.createNewModel(updateInfo.stockName, stock.getData(), hyperTune=False, showStats=True)
+                modelManager.createNewModel(updateInfo.stockName, stockData, hyperTune=False, showStats=True)
             else:
                 print(f"Stock {updateInfo.stockName} not found in stock manager")
 
@@ -45,11 +46,18 @@ if __name__ == "__main__":
     stockManager = StockManager.StockManager()
     modelManager = ModelManager()
 
+    predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
 
-    updateLoop(stockManager=stockManager, modelManager=modelManager);
+    updateLoop(stockManager=stockManager, modelManager=modelManager, interval="1d");
     
 
-    frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)
-    frame.run()
+    server = Server(predictor=predictor, stockManager=stockManager)
+
+
+    server.start()
+
+
+    #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)
+    #frame.run()
 
     input("Press Enter to exit...")

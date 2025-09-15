@@ -24,8 +24,12 @@
   <ItemGroup>
     <Compile Include="api\server.py" />
     <Compile Include="api\__init__.py" />
+    <Compile Include="data\database\StockReader.py" />
+    <Compile Include="data\database\StockWriter.py" />
+    <Compile Include="data\database\TransformerDB.py" />
+    <Compile Include="data\database\__init__.py" />
     <Compile Include="data\Stock.py" />
-    <Compile Include="data\StockDB.py" />
+    <Compile Include="data\database\StockDB.py" />
     <Compile Include="data\StockManager.py" />
     <Compile Include="data\StockUpdateInfo.py" />
     <Compile Include="data\__init__.py" />
@@ -65,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
+    <Folder Include="data\database\" />
     <Folder Include="ml\model_core\" />
     <Folder Include="ml\" />
     <Folder Include="api\" />
