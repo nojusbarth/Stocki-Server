@@ -1,9 +1,9 @@
-from ml import DataPreparer
-from ml.model_core import ModelInfo
-from ml.model_core import ModelTrainer
-from ml.model_core import ModelEvaluator
-from ml.model_core import HyperTuner
-from ml.model_core import Model
+from ml.pipeline import DataPreparer
+from ml import ModelInfo
+from ml.pipeline import ModelTrainer
+from ml.pipeline import ModelEvaluator
+from ml.pipeline import HyperTuner
+from ml import Model
 
 
 from xgboost import XGBRegressor
@@ -16,12 +16,23 @@ class ModelMaker:
        self.modelEvaluator = ModelEvaluator.ModelEvaluator()
        self.dataPreparer = DataPreparer.DataPreparer()
        self.hyperTuner = HyperTuner.HyperTuner()
-       self.numberOfSamples = 365*2
+       
+       self.numberOfSamples = {
+           "1d" : 365 * 2,
+           "1h" : None #use all data
+           }
 
 
-    def createModel(self, data, hyperTune=False, showStats=False):
+    def createModel(self, data, interval, hyperTune=False, showStats=False):
 
-        dataX, dataY = self.dataPreparer.prepareFeatures(data, numSampes=self.numberOfSamples)
+        numSamples = self.numberOfSamples[interval]
+
+        if numSamples is None:
+            numSamples = data.shape[0]
+
+
+        dataX, dataY = self.dataPreparer.prepareFeatures(data, numSampes=numSamples)
+
         Xtrain, Ytrain, Xtest, Ytest = self.dataPreparer.createSplit(dataX, dataY, self.modelTrainer.getSplit())
 
         #create model
@@ -38,7 +49,7 @@ class ModelMaker:
 
         metrics = self.getMetrics(model, Xtest, Ytest, testCloses, showStats)
 
-        model.addInfo(self.createInfo(hyperParams, metrics, latestTrain))
+        model.addInfo(self.createInfo(hyperParams, metrics, latestTrain, numSamples))
 
         return model
 
@@ -65,7 +76,7 @@ class ModelMaker:
 
 
     #PRIVATE FUNCTION
-    def createInfo(self, hyperParams,  metrics, latestTrain):
+    def createInfo(self, hyperParams,  metrics, latestTrain, numSamples):
 
         return ModelInfo.ModelInfo(
             latestUpdate=date.today().strftime("%Y-%m-%d"),
@@ -73,5 +84,5 @@ class ModelMaker:
             metrics=metrics,
             features=self.dataPreparer.getFeaturesNames(),
             hyperParameters=hyperParams,
-            numSamples = self.numberOfSamples,
+            numSamples = numSamples,
             trainTestSplit=self.modelTrainer.getSplit())

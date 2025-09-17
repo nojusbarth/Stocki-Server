@@ -61,4 +61,4 @@ class StockReader:
         if result is None or result[0] is None:
             return None
         else:
-            return pd.to_datetime(result[0])
+            return pd.to_datetime(result[0], utc=True)

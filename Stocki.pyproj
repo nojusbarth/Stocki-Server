@@ -35,18 +35,22 @@
     <Compile Include="data\__init__.py" />
     <Compile Include="drbLayout.py" />
     <Compile Include="lineFit.py" />
-    <Compile Include="ml\DataPreparer.py" />
-    <Compile Include="ml\ModelFiles.py" />
+    <Compile Include="ml\pipeline\DataPreparer.py" />
+    <Compile Include="ml\repository\ModelFiles.py" />
     <Compile Include="ml\ModelManager.py" />
-    <Compile Include="ml\model_core\HyperTuner.py" />
-    <Compile Include="ml\model_core\Model.py" />
-    <Compile Include="ml\model_core\ModelEvaluator.py" />
-    <Compile Include="ml\model_core\ModelInfo.py" />
-    <Compile Include="ml\model_core\ModelMaker.py" />
-    <Compile Include="ml\model_core\ModelTrainer.py" />
-    <Compile Include="ml\model_core\__init__.py" />
-    <Compile Include="ml\PredictionPacket.py" />
-    <Compile Include="ml\Predictor.py" />
+    <Compile Include="ml\pipeline\HyperTuner.py" />
+    <Compile Include="ml\Model.py" />
+    <Compile Include="ml\pipeline\ModelEvaluator.py" />
+    <Compile Include="ml\ModelInfo.py" />
+    <Compile Include="ml\pipeline\ModelMaker.py" />
+    <Compile Include="ml\pipeline\ModelTrainer.py" />
+    <Compile Include="ml\pipeline\__init__.py" />
+    <Compile Include="ml\prediction\PredictionPacket.py" />
+    <Compile Include="ml\prediction\Predictor.py" />
+    <Compile Include="ml\prediction\__init__.py" />
+    <Compile Include="ml\repository\ModelDB.py" />
+    <Compile Include="ml\repository\ModelRepository.py" />
+    <Compile Include="ml\repository\__init__.py" />
     <Compile Include="ml\__init__.py" />
     <Compile Include="view\MainFrame.py" />
     <Compile Include="view\__init__.py" />
@@ -70,9 +74,11 @@
   <ItemGroup>
     <Folder Include="data\" />
     <Folder Include="data\database\" />
-    <Folder Include="ml\model_core\" />
+    <Folder Include="ml\repository\" />
+    <Folder Include="ml\pipeline\" />
     <Folder Include="ml\" />
     <Folder Include="api\" />
+    <Folder Include="ml\prediction\" />
     <Folder Include="view\" />
     <Folder Include="view\assets\" />
   </ItemGroup>

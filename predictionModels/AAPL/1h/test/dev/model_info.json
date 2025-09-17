@@ -1,10 +1,10 @@
 {
-    "latestUpdate": "2025-09-13",
-    "trainUntil": "2025-02-21",
+    "latestUpdate": "2025-09-17",
+    "trainUntil": "2025-09-02",
     "metrics": {
-        "RMSE": 14.58062706926431,
-        "MAE": 11.023707633707168,
-        "R2": 0.852024301477236
+        "RMSE": 1.6069101302338633,
+        "MAE": 0.9924921522977911,
+        "R2": 0.859187948641094
     },
     "features": [
         "Return",
@@ -27,6 +27,6 @@
         "subsample": 0.9026219130291653,
         "random_state": 42
     },
-    "numSamples": 730,
+    "numSamples": 435,
     "trainTestSplit": 0.8
 }

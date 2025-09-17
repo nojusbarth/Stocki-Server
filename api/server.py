@@ -18,9 +18,10 @@ class Server:
     def setupRoutes(self):
         @self.app.route("/predictions/<ticker>", methods=["GET"])
         def getPrediction(ticker):
-            days = int(request.args.get("days", 1)) # default is one
+            period = int(request.args.get("period", 1))
+            interval = str(request.args.get("interval", "1d"))
 
-            packets = self.predictor.predict(ticker,days,"1d")
+            packets = self.predictor.predict(ticker,period,interval)
 
             jsonReady = [vars(p) for p in packets]
 
@@ -30,12 +31,15 @@ class Server:
         @self.app.route("/historical/<ticker>", methods=["GET"])
         def getHistorical(ticker):
             
-            days = int(request.args.get("days", 30))
+            period = int(request.args.get("period", 30))
+            interval = str(request.args.get("interval", "1d"))
 
 
-            data = self.stockManager.getStockData(ticker, "1d").tail(days)
+            data = self.stockManager.getStockData(ticker, interval).tail(period)
 
-            result = [{"date": index.strftime("%Y-%m-%d"), "close": row["Close"]} 
+            dateFormat = "%Y-%m-%d" if interval == "1d" else "%Y-%m-%d %H:%M"
+
+            result = [{"date": index.strftime(dateFormat), "close": row["Close"]} 
               for index, row in data.iterrows()]
             
             

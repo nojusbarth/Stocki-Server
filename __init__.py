@@ -3,9 +3,8 @@
 import tkinter as tk
 from tkinter import ttk
 from api.server import Server
-from ml import Predictor
+from ml.prediction import Predictor
 from ml.ModelManager import ModelManager
-from ml.model_core import ModelEvaluator
 from data import Stock, StockManager
 from view import MainFrame
 from windowMng import *
@@ -48,13 +47,14 @@ if __name__ == "__main__":
 
     predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
 
-    updateLoop(stockManager=stockManager, modelManager=modelManager, interval="1d");
+    #updateLoop(stockManager=stockManager, modelManager=modelManager, interval="1d");
+
     
 
     server = Server(predictor=predictor, stockManager=stockManager)
 
-
     server.start()
+
 
 
     #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)

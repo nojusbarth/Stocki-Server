@@ -21,7 +21,7 @@ class StockManager():
 
     def updateStocks(self, interval):
 
-        currentTime = pd.Timestamp.now()
+        currentTime = pd.Timestamp.now(tz="UTC")
 
             
         delta = pd.Timedelta(days=1) if interval == "1d" else pd.Timedelta(hours=1)
@@ -30,7 +30,7 @@ class StockManager():
     
         for ticker in tickers:
             lastUpdate = self.stockDB.getLatestUpdateTime(ticker, interval=interval)
-    
+
             # Prüfen, ob Update nötig ist
             if abs(currentTime - lastUpdate) >= delta:
                 print(f"Updating [interval={interval}] stock: {ticker}")

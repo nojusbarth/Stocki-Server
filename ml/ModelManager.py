@@ -6,35 +6,35 @@ from xgboost import XGBRegressor
 from datetime import datetime, timedelta
 from sklearn.metrics import mean_squared_error
 from pathlib import Path
-from ml import DataPreparer
-from ml import ModelFiles
+from ml.pipeline import DataPreparer
 
-from ml.model_core import ModelMaker
+from ml.pipeline import ModelMaker
+from ml.repository import ModelRepository
 
 
 class ModelManager:
 
     def __init__(self):
-        self.modelFiler = ModelFiles.ModelFiles(Path(r"C:\Users\nojob\Programmieren\Visual Studio\python\Stocki\project\predictionModels"))
+        self.modelRepository = ModelRepository.ModelRepository()
         self.modelMaker = ModelMaker.ModelMaker()
 
-    def createNewModel(self, stockName, stockData, hyperTune=False, showStats=False):
 
-        data = stockData.copy()
 
-        self.model = self.modelMaker.createModel(data, hyperTune=hyperTune, showStats=showStats)
+    def createNewModel(self, stockName, stockData, interval, version, hyperTune=False, showStats=False):
         
-        #save model
-        answer = input('should model be saved?:')
+        #model pipeline
+        self.model = self.modelMaker.createModel(stockData, interval, hyperTune=hyperTune, showStats=showStats)
         
+
+        answer = input('should model be saved?:')        
         if answer.lower() in ['y', 'yes']:
-            self.modelFiler.saveModel(self.model, stockName)
+            self.modelRepository.saveModel(self.model, stockName, interval, version, "dev")
 
 
 
-    def getFittingModel(self, stockName):
+    def getFittingModel(self, stockName, interval):
 
-        model = self.modelFiler.loadModel(stockName)
+        model = self.modelRepository.loadModel(stockName, interval, "dev", "test")
         if model is None:
             print(f"No saved model found for stock {stockName}.")
             return None

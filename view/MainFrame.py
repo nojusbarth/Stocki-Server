@@ -7,7 +7,7 @@ import numpy as np
 
 from data.Stock import Stock
 from ml import ModelManager
-from ml import Predictor
+from ml.prediction import Predictor
 
 
 class MainFrame:

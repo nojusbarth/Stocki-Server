@@ -20,10 +20,9 @@ class DataPreparer():
         return self.features
 
     #WARNING: data should be copied before passing to this function
-    def prepareFeatures(self, data, numSampes=None):
+    def prepareFeatures(self, data, numSampes):
 
-        if numSampes is not None:
-            data = data.tail(numSampes)
+        data = data.tail(numSampes)
 
         data = data.copy() # only needed to prevent pandas warnings filling debug
         data["Return"] = data["Close"].pct_change(fill_method=None)

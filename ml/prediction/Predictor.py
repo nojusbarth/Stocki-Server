@@ -1,5 +1,6 @@
 from datetime import timedelta
-from ml import DataPreparer, PredictionPacket
+from ml.pipeline import DataPreparer
+from ml.prediction import PredictionPacket
 from ml import ModelManager
 
 import pandas as pd
@@ -24,7 +25,7 @@ class Predictor():
         stockData = self.stockManager.getStockData(stockName, interval)
 
 
-        self.model = self.modelManager.getFittingModel(stockName)
+        self.model = self.modelManager.getFittingModel(stockName, interval)
 
         if self.model is None:
             print("No fitting model found, cannot predict.")
@@ -48,7 +49,7 @@ class Predictor():
         if showPlot:
             self.showPlot(stockData, days, predictedPrices)
 
-        return self.buildPackets(startDate = stockData.index[-1], returns=predictedReturns, closes=predictedPrices)
+        return self.buildPackets(startDate = stockData.index[-1], returns=predictedReturns, closes=predictedPrices, interval=interval)
 
 
     
@@ -88,16 +89,25 @@ class Predictor():
         plt.show()
 
 
-    def buildPackets(self, startDate, returns, closes):
+    def buildPackets(self, startDate, returns, closes, interval):
 
-        predictionPackets=[]
+        predictionPackets = []
+
+        if interval == "1d":
+            delta = timedelta(days=1)
+            date_format = "%Y-%m-%d"
+        elif interval == "1h":
+            delta = timedelta(hours=1)
+            date_format = "%Y-%m-%d %H:%M"
+        else:
+            raise ValueError(f"Unsupported interval: {interval}")
 
         for r, c in zip(returns, closes):
-            startDate += timedelta(days=1)
+            startDate += delta
             packet = PredictionPacket.PredictionPacket(
-                date=startDate.strftime("%Y-%m-%d"),
+                date=startDate.strftime(date_format),
                 closePrediction=float(c),
-                pctReturn=float(r*100) #in percent
+                pctReturn=float(r * 100)  # in percent
             )
             predictionPackets.append(packet)
 
