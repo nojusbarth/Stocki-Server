@@ -67,7 +67,7 @@ class Predictor():
         for i in range(days):
 
             #y not needed for prediction
-            Xdata, _ = self.dataPreparer.prepareFeatures(data)
+            Xdata, _ = self.dataPreparer.prepareFeatures(data, 34)
 
             nextDayPred = self.model.predict(Xdata[-1].reshape(1, -1))[0]
             predictedReturns.append(nextDayPred)

@@ -1,6 +1,8 @@
 import pandas as pd
 import os
-import sqlite3
+import mysql.connector
+from dotenv import load_dotenv
+
 
 from data.database import StockReader, StockWriter, TransformerDB
 
@@ -8,8 +10,16 @@ from data.database import StockReader, StockWriter, TransformerDB
 class StockDB:
 
     def __init__(self):
-        self.dbName = "stocks"
-        self.conn = sqlite3.connect(f"{self.dbName}.db", check_same_thread=False)
+
+        load_dotenv()        
+        
+        self.conn = mysql.connector.connect(
+            host=os.getenv("MYSQL_HOST"),
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DBSTOCKS")
+        )
+
         self.cursor = self.conn.cursor()
 
         self.columnsDB = ["ticker", "date", "open", "high", "low", "close", "volume"]
@@ -18,34 +28,6 @@ class StockDB:
         self.dbTranformer = TransformerDB.TransformerDB(self.columnsDB, self.columnsDF)
         self.dbWriter = StockWriter.StockWriter(self.cursor, self.conn)
         self.dbReader = StockReader.StockReader(self.cursor, self.conn)
-
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stocks_daily (
-            ticker TEXT,
-            date   DATE,
-            open   REAL,
-            high   REAL,
-            low    REAL,
-            close  REAL,
-            volume REAL,
-            PRIMARY KEY (ticker, date)
-        );
-        """)
-
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS stocks_hourly (
-            ticker TEXT,
-            date   DATETIME,
-            open   REAL,
-            high   REAL,
-            low    REAL,
-            close  REAL,
-            volume REAL,
-            PRIMARY KEY (ticker, date)
-        );
-        """)
-
-        self.conn.commit()
 
 
     def fetchDataSingle(self, ticker, interval):

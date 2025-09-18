@@ -12,25 +12,25 @@ class StockWriter:
 
         print(f"Adding entries for {stockName} [interval = {interval}] into {table}...")
 
-        numEntriesBefore = self.cursor.execute(
+        self.cursor.execute(
             f"SELECT COUNT(*) FROM {table}"
-        ).fetchone()[0]
+        )
 
-        #temporary table to avoid dublicate insertions
-        stockData.to_sql("temp_table", self.conn, if_exists="replace", index=False)
+        numEntriesBefore = self.cursor.fetchone()[0]
 
-        self.cursor.execute(f"""
-            INSERT OR IGNORE INTO {table}
-            SELECT * FROM temp_table
-        """)
+        cols = ", ".join(stockData.columns)
+        placeholders = ", ".join(["%s"] * len(stockData.columns))
 
-        numEntriesAfter = self.cursor.execute(
-            f"SELECT COUNT(*) FROM {table}"
-        ).fetchone()[0]
+        query = f"INSERT IGNORE INTO {table} ({cols}) VALUES ({placeholders})"
 
-        self.conn.commit()
+        values = [tuple(x) for x in stockData.to_numpy()]
+
+        if values:
+            self.cursor.executemany(query, values)
+            self.conn.commit()
+
+        self.cursor.execute(f"SELECT COUNT(*) FROM {table}")
+        numEntriesAfter = self.cursor.fetchone()[0]
 
         addedRows = numEntriesAfter - numEntriesBefore
         print(f"Added {addedRows} new entries to {stockName} [interval = {interval}] in {table}")
-
-        return addedRows

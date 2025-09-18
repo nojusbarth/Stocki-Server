@@ -1,11 +1,17 @@
 
 import pandas as pd
+from sqlalchemy import create_engine
+
 
 class StockReader:
 
     def __init__(self, cursor, conn):
         self.cursor = cursor
         self.conn = conn
+
+        #only needed to safely read from sql to pandas dataframe
+        self.engine = create_engine("mysql+mysqlconnector://root:Binoderhund1!_@127.0.0.1/stocks")
+
 
 
     #dont set tickers if all available data should be fetched
@@ -24,8 +30,8 @@ class StockReader:
         for ticker in tickers:
             print(f"Loading stock: {ticker}")
             df = pd.read_sql_query(
-                f"SELECT * FROM {table} WHERE ticker=? ORDER BY date",
-                self.conn,
+                "SELECT * FROM stocks_daily WHERE ticker=%s ORDER BY date",
+                self.engine,
                 params=(ticker,)
             )
 
@@ -39,24 +45,23 @@ class StockReader:
 
 
     def getAllTickers(self):
-        tickers_daily = self.cursor.execute(
-            "SELECT DISTINCT ticker FROM stocks_daily"
-        ).fetchall()
-        tickers_hourly = self.cursor.execute(
-            "SELECT DISTINCT ticker FROM stocks_hourly"
-        ).fetchall()
-    
-        # flatten and remove duplicates
-        all_tickers = {t[0] for t in tickers_daily} | {t[0] for t in tickers_hourly}
-        return list(all_tickers)
+        self.cursor.execute("""
+            SELECT DISTINCT ticker FROM stocks_daily
+            UNION
+            SELECT DISTINCT ticker FROM stocks_hourly
+        """)
+        all_tickers = [row[0] for row in self.cursor.fetchall()]
+        return all_tickers
 
 
     def getLatestUpdateTime(self, ticker, table):
 
-        result = self.cursor.execute(
-            f"SELECT MAX(date) FROM {table} WHERE ticker=?",
+        self.cursor.execute(
+            f"SELECT MAX(date) FROM {table} WHERE ticker=%s",
             (ticker,)
-        ).fetchone()
+        )
+
+        result = self.cursor.fetchone()
 
         if result is None or result[0] is None:
             return None

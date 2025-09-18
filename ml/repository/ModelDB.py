@@ -1,38 +1,34 @@
-
-import sqlite3
+import os
+import mysql.connector
+from dotenv import load_dotenv
 
 
 class ModelDB:
 
     def __init__(self):
 
-        self.dbName = "models"
-        self.conn = sqlite3.connect(f"{self.dbName}.db", check_same_thread=False)
+        load_dotenv()
+
+        self.conn = mysql.connector.connect(
+            host=os.getenv("MYSQL_HOST"),
+            user=os.getenv("MYSQL_USER"),
+            password=os.getenv("MYSQL_PASSWORD"),
+            database=os.getenv("MYSQL_DBMODELS")
+        )
         self.cursor = self.conn.cursor()
-
-
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS models (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,   
-            name TEXT NOT NULL,                     
-            interval TEXT NOT NULL,                 
-            version TEXT NOT NULL,
-            stage TEXT NOT NULL CHECK(stage IN ('dev', 'production', 'archived')),
-            model_path TEXT NOT NULL,               
-            scaler_path TEXT NOT NULL,              
-            info_path TEXT NOT NULL,                
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(name, interval, version, stage)
-        );
-        """)
 
 
 
     def registerModel(self, name, interval, version, stage, modelPath, scalerPath, infoPath):
 
         self.cursor.execute("""
-            INSERT OR REPLACE INTO models (name, interval, version, stage, model_path, scaler_path, info_path)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO models (name, interval_name, version, stage, model_path, scaler_path, info_path)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                stage = VALUES(stage),
+                model_path = VALUES(model_path),
+                scaler_path = VALUES(scaler_path),
+                info_path = VALUES(info_path)
         """, (name, interval, version, stage, modelPath, scalerPath, infoPath))
 
         self.conn.commit()
@@ -43,19 +39,20 @@ class ModelDB:
 
     def getModelPaths(self, name, interval, stage, version=None):
 
-        query = "SELECT model_path, scaler_path, info_path FROM models WHERE name=? AND interval=?"
+        query = "SELECT model_path, scaler_path, info_path FROM models WHERE name=%s AND interval_name=%s"
         params = [name, interval]
-
+        
         if version is not None:
-            query += " AND version=?"
+            query += " AND version=%s"
             params.append(version)
-
+        
         self.cursor.execute(query, params)
-
+        
         row = self.cursor.fetchone()
-
+        
         if row is None:
             raise ValueError(f"No Model found for name={name}, interval={interval}, version={version}, stage={stage}")
+
 
         return {
             "model_path": row[0],

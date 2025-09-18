@@ -47,9 +47,7 @@ class StockManager():
                 if isinstance(newData.columns, pd.MultiIndex):
                     newData.columns = newData.columns.get_level_values(0)
     
-                # In die DB schreiben
-                addedRows = self.stockDB.addStockData(ticker, newData, interval=interval)
-                print(f"Updated {interval} stock: {ticker}, added {addedRows} rows")
+                self.stockDB.addStockData(ticker, newData, interval=interval)
 
 
 

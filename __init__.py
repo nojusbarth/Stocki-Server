@@ -3,6 +3,7 @@
 import tkinter as tk
 from tkinter import ttk
 from api.server import Server
+from data.database import StockDB
 from ml.prediction import Predictor
 from ml.ModelManager import ModelManager
 from data import Stock, StockManager
@@ -44,12 +45,11 @@ if __name__ == "__main__":
     
     stockManager = StockManager.StockManager()
     modelManager = ModelManager()
-
+    
     predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
 
     #updateLoop(stockManager=stockManager, modelManager=modelManager, interval="1d");
 
-    
 
     server = Server(predictor=predictor, stockManager=stockManager)
 
