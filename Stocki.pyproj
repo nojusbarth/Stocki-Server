@@ -31,10 +31,13 @@
     <Compile Include="data\Stock.py" />
     <Compile Include="data\database\StockDB.py" />
     <Compile Include="data\StockManager.py" />
-    <Compile Include="data\StockUpdateInfo.py" />
+    <Compile Include="data\update\StockUpdateInfo.py" />
+    <Compile Include="data\update\StockUpdater.py" />
+    <Compile Include="data\update\__init__.py" />
     <Compile Include="data\__init__.py" />
     <Compile Include="drbLayout.py" />
     <Compile Include="lineFit.py" />
+    <Compile Include="ml\ModelUpdater.py" />
     <Compile Include="ml\pipeline\DataPreparer.py" />
     <Compile Include="ml\repository\ModelFiles.py" />
     <Compile Include="ml\ModelManager.py" />
@@ -74,6 +77,7 @@
   <ItemGroup>
     <Folder Include="data\" />
     <Folder Include="data\database\" />
+    <Folder Include="data\update\" />
     <Folder Include="ml\repository\" />
     <Folder Include="ml\pipeline\" />
     <Folder Include="ml\" />

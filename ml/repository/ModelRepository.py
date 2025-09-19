@@ -34,6 +34,20 @@ class ModelRepository:
         return model
         
 
+    def getModelUpdateTime(self, name, interval, stage, version):
+
+        paths = self.modelDB.getModelPaths(name, interval, stage, version)
+
+        info = self.modelFiler.loadModelInfo(paths["info_path"])
+
+        return info.latestUpdate
+
+
+    def containsModel(self, name, interval, stage, version):
+
+        return self.modelDB.containsModel(name, interval, stage, version)
+
+
     #PRIVATE FUNCTION
     def findRootDirectory(self, name, interval, version, stage):
 

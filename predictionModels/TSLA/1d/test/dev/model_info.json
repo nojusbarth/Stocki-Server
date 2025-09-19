@@ -2,9 +2,9 @@
     "latestUpdate": "2025-09-18",
     "trainUntil": "2025-02-27",
     "metrics": {
-        "RMSE": 4.905207751628124,
-        "MAE": 3.1367785409660818,
-        "R2": 0.8812507190402049
+        "RMSE": 13.835523578049003,
+        "MAE": 10.461176110388104,
+        "R2": 0.8927202567982895
     },
     "features": [
         "Return",
@@ -19,13 +19,11 @@
         "Momentum_10"
     ],
     "hyperParameters": {
-        "objective": "reg:squarederror",
-        "colsample_bytree": 0.6203095920963915,
-        "learning_rate": 0.05768766306891758,
-        "max_depth": 10,
-        "n_estimators": 1941,
-        "subsample": 0.9026219130291653,
-        "random_state": 42
+        "learning_rate": 0.12344542570578687,
+        "max_depth": 8,
+        "subsample": 0.642261198617806,
+        "colsample_bytree": 0.5538349762978185,
+        "n_estimators": 106
     },
     "numSamples": 730,
     "trainTestSplit": 0.8

@@ -34,6 +34,15 @@ class ModelFiles:
             return None
 
 
+
+        loadedModel = Model.Model(model, scaler)
+        loadedModel.addInfo(self.loadModelInfo(infoPath))
+
+        return loadedModel
+
+
+    def loadModelInfo(self, infoPath):
+
         #load info 
         info = None
         try:
@@ -44,10 +53,8 @@ class ModelFiles:
             print(f"Error loading info for model {infoPath}: {e}")
             return None
 
-        loadedModel = Model.Model(model, scaler)
-        loadedModel.addInfo(info)
+        return info
 
-        return loadedModel
 
 
 

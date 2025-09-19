@@ -4,28 +4,36 @@ import tkinter as tk
 from tkinter import ttk
 from api.server import Server
 from data.database import StockDB
+from data.update import StockUpdater
 from ml.prediction import Predictor
 from ml.ModelManager import ModelManager
 from data import Stock, StockManager
 from view import MainFrame
 from windowMng import *
+from ml import ModelUpdater
+
+import threading
+import time
 
 
-def updateLoop(stockManager, modelManager, interval):
-    #update loop
+def setupUpdateLoopStocks():
+    hourUpdater = StockUpdater.StockUpdater(interval="1h")
+    dayUpdater = StockUpdater.StockUpdater(interval="1d")
 
-    stockManager.updateStocks(interval)
-    updateInfos = stockManager.getLatestUpdateInfo()
-    for updateInfo in updateInfos[interval]:
-        if not modelManager.isModelUpdated(updateInfo):
-            #create new model with up to date data
+    hourThread = threading.Thread(target=hourUpdater.run, daemon=True)
+    dayThread = threading.Thread(target=dayUpdater.run, daemon=True)
 
-            stockData = stockManager.getStockData(updateInfo.stockName, interval)
-            if stockData is not None:
-                print(f"Creating new model for stock {updateInfo.stockName}")
-                modelManager.createNewModel(updateInfo.stockName, stockData, hyperTune=False, showStats=True)
-            else:
-                print(f"Stock {updateInfo.stockName} not found in stock manager")
+    hourThread.start()
+    dayThread.start()
+
+
+def setupUpdateLoopModels():
+    hourModelUpdater = ModelUpdater.ModelUpdater(interval="1h")
+    dayModelUpdater = ModelUpdater.ModelUpdater(interval="1d")
+    hourModelThread = threading.Thread(target=hourModelUpdater.run, daemon=True)
+    dayModelThread = threading.Thread(target=dayModelUpdater.run, daemon=True)
+    hourModelThread.start()
+    #dayModelThread.start()
 
 
 #
@@ -48,7 +56,11 @@ if __name__ == "__main__":
     
     predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
 
-    #updateLoop(stockManager=stockManager, modelManager=modelManager, interval="1d");
+    setupUpdateLoopStocks()
+    setupUpdateLoopModels()
+
+
+
 
 
     server = Server(predictor=predictor, stockManager=stockManager)

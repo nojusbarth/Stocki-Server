@@ -6,3 +6,4 @@ from dataclasses import dataclass
 class StockUpdateInfo:
     stockName : str
     latestUpdateTime : str
+    interval : str

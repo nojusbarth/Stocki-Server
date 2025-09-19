@@ -26,9 +26,7 @@ class ModelManager:
         self.model = self.modelMaker.createModel(stockData, interval, hyperTune=hyperTune, showStats=showStats)
         
 
-        answer = input('should model be saved?:')        
-        if answer.lower() in ['y', 'yes']:
-            self.modelRepository.saveModel(self.model, stockName, interval, version, "dev")
+        self.modelRepository.saveModel(self.model, stockName, interval, version, "dev")
 
 
 
@@ -41,7 +39,31 @@ class ModelManager:
         return model
 
 
+    def containsModel(self, stockName, interval):
+
+        return self.modelRepository.containsModel(stockName, interval, "dev", "test")
+
 
     def isModelUpdated(self, stockUpdateInfo):
-        return self.modelFiler.isModelUpdated(stockUpdateInfo.stockName, stockUpdateInfo.latestUpdateTime)
+
+        modelUpdateStr = self.modelRepository.getModelUpdateTime(
+            stockUpdateInfo.stockName, 
+            stockUpdateInfo.interval, 
+            stage="dev", 
+            version="test"
+        )
+        stockUpdateStr = stockUpdateInfo.latestUpdateTime
+
+        if stockUpdateInfo.interval == "1d":
+            dt_format = "%Y-%m-%d"
+            modelUpdateTime = datetime.strptime(modelUpdateStr, dt_format).date()
+            stockUpdateTime = datetime.strptime(stockUpdateStr, dt_format).date()
+        elif stockUpdateInfo.interval == "1h":
+            dt_format = "%Y-%m-%d %H"
+            modelUpdateTime = datetime.strptime(modelUpdateStr, dt_format).replace(minute=0, second=0, microsecond=0)
+            stockUpdateTime = datetime.strptime(stockUpdateStr, dt_format).replace(minute=0, second=0, microsecond=0)
+        else:
+            raise ValueError(f"Unbekanntes Interval: {stockUpdateInfo.interval}")
+
+        return modelUpdateTime >= stockUpdateTime
 

@@ -8,7 +8,7 @@ from ml import Model
 
 from xgboost import XGBRegressor
 from sklearn.preprocessing import MinMaxScaler
-from datetime import date
+from datetime import datetime
 
 class ModelMaker:
     def __init__(self):
@@ -24,6 +24,8 @@ class ModelMaker:
 
 
     def createModel(self, data, interval, hyperTune=False, showStats=False):
+
+        dateFormat = "%Y-%m-%d" if interval == "1d" else "%Y-%m-%d %H"
 
         numSamples = self.numberOfSamples[interval]
 
@@ -43,13 +45,16 @@ class ModelMaker:
 
         #train
         model = self.modelTrainer.trainModel(model, Xtrain, Ytrain)
-        latestTrain = data.index[(len(data) - len(Xtest))-1].strftime("%Y-%m-%d")
+
+
+        latestTrain = data.index[(len(data) - len(Xtest))-1].strftime(dateFormat)
+        latestSeen = data.index[-1].strftime(dateFormat)
 
         testCloses = data["Close"].iloc[-len(Xtest)-1:-1].values
 
         metrics = self.getMetrics(model, Xtest, Ytest, testCloses, showStats)
 
-        model.addInfo(self.createInfo(hyperParams, metrics, latestTrain, numSamples))
+        model.addInfo(self.createInfo(latestSeen,hyperParams, metrics, latestTrain, numSamples))
 
         return model
 
@@ -76,10 +81,10 @@ class ModelMaker:
 
 
     #PRIVATE FUNCTION
-    def createInfo(self, hyperParams,  metrics, latestTrain, numSamples):
+    def createInfo(self, latestUpdate,hyperParams,  metrics, latestTrain, numSamples):
 
         return ModelInfo.ModelInfo(
-            latestUpdate=date.today().strftime("%Y-%m-%d"),
+            latestUpdate=latestUpdate,
             trainUntil=latestTrain,
             metrics=metrics,
             features=self.dataPreparer.getFeaturesNames(),

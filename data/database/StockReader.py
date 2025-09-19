@@ -30,7 +30,7 @@ class StockReader:
         for ticker in tickers:
             print(f"Loading stock: {ticker}")
             df = pd.read_sql_query(
-                "SELECT * FROM stocks_daily WHERE ticker=%s ORDER BY date",
+                f"SELECT * FROM {table} WHERE ticker=%s ORDER BY date",
                 self.engine,
                 params=(ticker,)
             )

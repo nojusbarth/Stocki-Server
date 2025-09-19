@@ -1,7 +1,7 @@
 
 import pandas as pd
 from data.database import StockDB
-from data import StockUpdateInfo
+from data.update import StockUpdateInfo
 from stockMath import StockMath
 import yfinance as yf
 from data import Stock
@@ -19,35 +19,47 @@ class StockManager():
 
         
 
-    def updateStocks(self, interval):
+    def updateStocks(self, interval, tickers):
 
         currentTime = pd.Timestamp.now(tz="UTC")
-
-            
         delta = pd.Timedelta(days=1) if interval == "1d" else pd.Timedelta(hours=1)
-    
-        tickers = self.stockDB.getAllTickers()
-    
+
+        tickersToUpdate = []
+        lastUpdates = []
         for ticker in tickers:
             lastUpdate = self.stockDB.getLatestUpdateTime(ticker, interval=interval)
-
-            # Prüfen, ob Update nötig ist
             if abs(currentTime - lastUpdate) >= delta:
-                print(f"Updating [interval={interval}] stock: {ticker}")
+                tickersToUpdate.append(ticker)
+                lastUpdates.append(lastUpdate)
+
+        if not tickersToUpdate:
+            print(f"No stocks need updating for interval {interval}.")
+            return
+
+        latestUpdate = min(lastUpdates) if lastUpdates else currentTime
+
+
+        print(f"Updating [interval={interval}] stocks: {tickers}")
     
-                # Neue Daten von yfinance laden
-                newData = yf.download(
-                    ticker,
-                    start=lastUpdate,
-                    end=currentTime,
-                    interval=interval,
-                    auto_adjust=True
-                )
+        newData = yf.download(
+            tickers=tickers,
+            start=latestUpdate,
+            end=currentTime,
+            interval=interval,
+            auto_adjust=True
+        )
     
-                if isinstance(newData.columns, pd.MultiIndex):
-                    newData.columns = newData.columns.get_level_values(0)
-    
-                self.stockDB.addStockData(ticker, newData, interval=interval)
+        for ticker in tickers:
+            if isinstance(newData.columns, pd.MultiIndex):
+                tickerData = newData.xs(ticker, level=1, axis=1).copy()
+            else:
+                tickerData = newData.copy()
+
+            tickerData = self.cleanUpdateData(tickerData)
+
+            if not tickerData.empty:
+                self.stockDB.addStockData(ticker, tickerData, interval=interval)
+
 
 
 
@@ -77,38 +89,42 @@ class StockManager():
         return self.stockDB.fetchDataSingle(name,interval)
 
 
-    def getLatestUpdateInfo(self):
-        intervals = ["1d", "1h"]
-        latestUpdateDict = {}
+    def getLatestUpdateInfo(self, interval):
 
+        intervalInfo = []
     
-        for interval in intervals:
-            intervalInfo = []
+        for ticker in self.stockDB.getAllTickers():
+            latestTime = self.stockDB.getLatestUpdateTime(ticker, interval)
+            if latestTime is not None:
+                if interval == "1d":
+                    timeStr = latestTime.strftime("%Y-%m-%d")
+                elif interval == "1h":
+                    timeStr = latestTime.strftime("%Y-%m-%d %H")
+                
     
-            for ticker in self.stockDB.getAllTickers():
-                latestTime = self.stockDB.getLatestUpdateTime(ticker, interval)
-                if latestTime is not None:
-                    if interval == "1d":
-                        timeStr = latestTime.strftime("%Y-%m-%d")
-                    elif interval == "1h":
-                        timeStr = latestTime.strftime("%Y-%m-%d %H")
-                    
-    
-                    intervalInfo.append(
-                        StockUpdateInfo.StockUpdateInfo(
-                            stockName=ticker,
-                            latestUpdateTime=timeStr
-                        )
+                intervalInfo.append(
+                    StockUpdateInfo.StockUpdateInfo(
+                        stockName=ticker,
+                        latestUpdateTime=timeStr,
+                        interval=interval
                     )
-    
-            latestUpdateDict[interval] = intervalInfo
-    
-        return latestUpdateDict
+                )
+   
+        return intervalInfo
 
 
 
     def getStockNames(self):
         return self.stockDB.getAllTickers()
+
+
+
+    #private 
+    def cleanUpdateData(self, data):
+        data = data.dropna(how="any")
+        data = data[(data != 0).all(axis=1)]
+
+        return data
 
 
     

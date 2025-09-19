@@ -33,4 +33,5 @@ class StockWriter:
         numEntriesAfter = self.cursor.fetchone()[0]
 
         addedRows = numEntriesAfter - numEntriesBefore
+
         print(f"Added {addedRows} new entries to {stockName} [interval = {interval}] in {table}")

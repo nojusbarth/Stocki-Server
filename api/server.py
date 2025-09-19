@@ -55,4 +55,4 @@ class Server:
 
 
     def start(self):
-        self.app.run(debug=True)
+        self.app.run(debug=False)

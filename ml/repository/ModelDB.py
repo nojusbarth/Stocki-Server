@@ -59,3 +59,14 @@ class ModelDB:
             "scaler_path": row[1],
             "info_path": row[2]
         }
+
+
+    def containsModel(self, name, interval, stage, version):
+        query = "SELECT COUNT(*) FROM models WHERE name=%s AND interval_name=%s AND stage=%s AND version=%s"
+        params = [name, interval, stage, version]
+        
+        self.cursor.execute(query, params)
+        
+        row = self.cursor.fetchone()
+        
+        return row[0] > 0
