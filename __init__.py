@@ -33,7 +33,7 @@ def setupUpdateLoopModels():
     hourModelThread = threading.Thread(target=hourModelUpdater.run, daemon=True)
     dayModelThread = threading.Thread(target=dayModelUpdater.run, daemon=True)
     hourModelThread.start()
-    #dayModelThread.start()
+    dayModelThread.start()
 
 
 #
@@ -58,13 +58,9 @@ if __name__ == "__main__":
 
     setupUpdateLoopStocks()
     setupUpdateLoopModels()
-
-
-
-
-
+    
     server = Server(predictor=predictor, stockManager=stockManager)
-
+    
     server.start()
 
 

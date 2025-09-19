@@ -23,16 +23,17 @@ class ModelManager:
     def createNewModel(self, stockName, stockData, interval, version, hyperTune=False, showStats=False):
         
         #model pipeline
-        self.model = self.modelMaker.createModel(stockData, interval, hyperTune=hyperTune, showStats=showStats)
+        modelDev, modelProd = self.modelMaker.createModel(stockData, interval, hyperTune=hyperTune, showStats=showStats)
         
 
-        self.modelRepository.saveModel(self.model, stockName, interval, version, "dev")
+        self.modelRepository.saveModel(modelDev, stockName, interval, version, "dev")
+        self.modelRepository.saveModel(modelProd, stockName, interval, version, "production")
 
 
 
     def getFittingModel(self, stockName, interval):
 
-        model = self.modelRepository.loadModel(stockName, interval, "dev", "test")
+        model = self.modelRepository.loadModel(stockName, interval, "production", "test")
         if model is None:
             print(f"No saved model found for stock {stockName}.")
             return None

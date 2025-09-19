@@ -37,14 +37,11 @@ class ModelDB:
 
 
 
-    def getModelPaths(self, name, interval, stage, version=None):
+    def getModelPaths(self, name, interval, stage, version):
 
-        query = "SELECT model_path, scaler_path, info_path FROM models WHERE name=%s AND interval_name=%s"
-        params = [name, interval]
+        query = "SELECT model_path, scaler_path, info_path FROM models WHERE name=%s AND interval_name=%s AND stage=%s AND version=%s"
+        params = [name, interval, stage, version]
         
-        if version is not None:
-            query += " AND version=%s"
-            params.append(version)
         
         self.cursor.execute(query, params)
         

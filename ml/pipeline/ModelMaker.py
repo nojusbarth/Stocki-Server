@@ -25,8 +25,6 @@ class ModelMaker:
 
     def createModel(self, data, interval, hyperTune=False, showStats=False):
 
-        dateFormat = "%Y-%m-%d" if interval == "1d" else "%Y-%m-%d %H"
-
         numSamples = self.numberOfSamples[interval]
 
         if numSamples is None:
@@ -34,29 +32,36 @@ class ModelMaker:
 
 
         dataX, dataY = self.dataPreparer.prepareFeatures(data, numSampes=numSamples)
-
         Xtrain, Ytrain, Xtest, Ytest = self.dataPreparer.createSplit(dataX, dataY, self.modelTrainer.getSplit())
 
-        #create model
+
+        #devModel
         hyperParams = self.getParams(hyperTune, Xtrain, Ytrain, Xtest, Ytest)
+        modelDev = Model.Model(XGBRegressor(**hyperParams), MinMaxScaler())
 
-        model = Model.Model(XGBRegressor(**hyperParams), MinMaxScaler())
-
-
-        #train
-        model = self.modelTrainer.trainModel(model, Xtrain, Ytrain)
-
-
-        latestTrain = data.index[(len(data) - len(Xtest))-1].strftime(dateFormat)
-        latestSeen = data.index[-1].strftime(dateFormat)
-
+ 
+        modelDev = self.modelTrainer.trainModel(modelDev, Xtrain, Ytrain)
         testCloses = data["Close"].iloc[-len(Xtest)-1:-1].values
+        metrics = self.getMetrics(modelDev, Xtest, Ytest, testCloses, showStats)
 
-        metrics = self.getMetrics(model, Xtest, Ytest, testCloses, showStats)
 
-        model.addInfo(self.createInfo(latestSeen,hyperParams, metrics, latestTrain, numSamples))
+        #prodModel
+        modelProd = Model.Model(XGBRegressor(**hyperParams), MinMaxScaler())
+        modelProd = self.modelTrainer.trainModel(modelProd, dataX, dataY)
+        
 
-        return model
+        dateFormat = "%Y-%m-%d" if interval == "1d" else "%Y-%m-%d %H"
+        modelDev.addInfo(self.createInfo(data.index[-1].strftime(dateFormat),
+                                      hyperParams, 
+                                      metrics, 
+                                      data.index[(len(data) - len(Xtest))-1].strftime(dateFormat), 
+                                      numSamples))
+        modelProd.addInfo(modelDev.info)
+
+        return modelDev, modelProd
+
+
+
 
 
 
@@ -75,13 +80,13 @@ class ModelMaker:
     #PRIVATE FUNCTION
     def getParams(self, hyperTune, Xtrain, Ytrain, Xtest, Ytest):
         if hyperTune:
-            return self.hyperTuner.chooseParametersXGBOOST(Xtrain, Ytrain, Xtest, Ytest)
+            return self.hyperTuner.chooseParametersXGBOOST(Xtrain, Ytrain)
         else:
             return self.hyperTuner.getDefaultParams()
 
 
     #PRIVATE FUNCTION
-    def createInfo(self, latestUpdate,hyperParams,  metrics, latestTrain, numSamples):
+    def createInfo(self, latestUpdate, hyperParams, metrics, latestTrain, numSamples):
 
         return ModelInfo.ModelInfo(
             latestUpdate=latestUpdate,

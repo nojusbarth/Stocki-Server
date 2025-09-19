@@ -11,12 +11,9 @@ class HyperTuner:
 
     def __init__(self):
 
-        self.validSplit = 0.95 #meaning only 1 - ..% of training data is used for validation
+        self.validSplit = 0.05
         self.trainingDataX = None
         self.trainingDataY = None
-        self.validDataX = None
-        self.validDataY = None
-        self.nSplits = 3
 
         self.defaultParams = {"objective" : 'reg:squarederror', 
                                           "colsample_bytree" : 0.6203095920963915, 
@@ -26,7 +23,7 @@ class HyperTuner:
                                           "random_state" : 42}
 
     
-    def chooseParametersXGBOOST(self, trainingDataX, trainingDataY, testDataX, testDataY, showTest=False):
+    def chooseParametersXGBOOST(self, trainingDataX, trainingDataY):
 
         self.trainingDataX = trainingDataX
         self.trainingDataY = trainingDataY
@@ -40,16 +37,6 @@ class HyperTuner:
         print("Beste Parameter:", study.best_params)
         print("Best RMSE:", study.best_value)
                
-        if showTest:
-            #evaluate model on test data
-
-            bestModel = XGBRegressor(**study.best_params)
-
-            bestModel.fit(self.trainingDataX, self.trainingDataY)
-
-            modelEvaluator = ModelEvaluator.ModelEvaluator()
-
-            modelEvaluator.evaluateModel(bestModel, testDataX, testDataY, showPlot=True)
 
         return study.best_params
 
@@ -67,27 +54,37 @@ class HyperTuner:
             "max_depth": trial.suggest_int("max_depth", 3, 10),
             "subsample": trial.suggest_float("subsample", 0.5, 1.0),
             "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
-            "n_estimators": trial.suggest_int("n_estimators", 100, 2000)
+            "n_estimators": trial.suggest_int("n_estimators", 100, 2000),
+            "eval_metric": "rmse"
         }
 
-
-        tscv = TimeSeriesSplit(n_splits=self.nSplits)
         rmses = []
 
-        for train_idx, valid_idx in tscv.split(self.trainingDataX):
-            X_train, X_valid = self.trainingDataX[train_idx], self.trainingDataX[valid_idx]
-            y_train, y_valid = self.trainingDataY[train_idx], self.trainingDataY[valid_idx]
+        n_train = len(self.trainingDataX)
+        validSize = int(n_train * self.validSplit)
+        step = validSize
 
+        for end in range(validSize, n_train, step):
+            X_tr = self.trainingDataX[:end]
+            X_val = self.trainingDataX[end:end+validSize]
+            y_tr = self.trainingDataY[:end]
+            y_val = self.trainingDataY[end:end+validSize]
+        
+            if len(X_val) < validSize:
+                break  #skip last window if not enough data
+        
             model = XGBRegressor(**param, early_stopping_rounds=10, random_state=42)
             model.fit(
-                X_train, y_train,
-                eval_set=[(X_valid, y_valid)],
+                X_tr, y_tr,
+                eval_set=[(X_val, y_val)],
                 verbose=False
             )
-
-            preds = model.predict(X_valid)
-            mse = mean_squared_error(y_valid, preds)
-            rmse = np.sqrt(mse)
+        
+            preds = model.predict(X_val)
+            rmse = np.sqrt(mean_squared_error(y_val, preds))
             rmses.append(rmse)
+        
+        weights = np.linspace(0.5, 1.0, len(rmses))
+        mean_weighted_rmse = np.average(rmses, weights=weights)
 
-        return np.mean(rmses)
+        return mean_weighted_rmse
