@@ -7,9 +7,10 @@ from flask import Flask, request, jsonify
 
 class Server:
 
-    def __init__(self, predictor, stockManager):
+    def __init__(self, predictor, stockManager, modelManager):
         self.predictor = predictor
         self.stockManager = stockManager
+        self.modelManager = modelManager
         self.tickerMap = TickerMapper.TickerMapper(self.stockManager.getStockTickers())
 
         self.app = Flask(__name__)
@@ -64,7 +65,15 @@ class Server:
 
             return jsonify(stockNamesList)
 
+        @self.app.route("/modelinfo/<name>", methods=["GET"])
+        def getModelInfo(name):
+            interval = str(request.args.get("interval", "1d"))
 
+            ticker = self.tickerMap.getTicker(name)
+
+            info = self.modelManager.getModelInfo(ticker, interval)
+
+            return jsonify(vars(info))
 
     def start(self):
         self.app.run(debug=False)

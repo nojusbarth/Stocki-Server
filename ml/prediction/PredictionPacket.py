@@ -9,3 +9,4 @@ class PredictionPacket:
     date: str
     pctReturn:float
     closePrediction:float
+    riskScore:int

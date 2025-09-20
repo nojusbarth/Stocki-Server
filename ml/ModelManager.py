@@ -44,6 +44,8 @@ class ModelManager:
 
         return self.modelRepository.containsModel(stockName, interval, "dev", "test")
 
+    def getModelInfo(self, stockName, interval):
+        return self.modelRepository.loadModel(stockName, interval, "dev", "test").info
 
     def isModelUpdated(self, stockUpdateInfo):
 

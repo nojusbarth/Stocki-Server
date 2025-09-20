@@ -59,7 +59,7 @@ if __name__ == "__main__":
     #setupUpdateLoopStocks()
     #setupUpdateLoopModels()
     #
-    server = Server(predictor=predictor, stockManager=stockManager)
+    server = Server(predictor=predictor, stockManager=stockManager, modelManager=modelManager)
     #
     server.start()
 

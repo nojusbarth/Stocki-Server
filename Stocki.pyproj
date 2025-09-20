@@ -41,6 +41,7 @@
     <Compile Include="lineFit.py" />
     <Compile Include="ml\ModelUpdater.py" />
     <Compile Include="ml\pipeline\DataPreparer.py" />
+    <Compile Include="ml\prediction\RiskCalculator.py" />
     <Compile Include="ml\repository\ModelFiles.py" />
     <Compile Include="ml\ModelManager.py" />
     <Compile Include="ml\pipeline\HyperTuner.py" />

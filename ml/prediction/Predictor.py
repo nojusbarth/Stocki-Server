@@ -1,6 +1,6 @@
 from datetime import timedelta
 from ml.pipeline import DataPreparer
-from ml.prediction import PredictionDateMapper, PredictionPacket
+from ml.prediction import PredictionDateMapper, PredictionPacket, RiskCalculator
 from ml import ModelManager
 
 import pandas as pd
@@ -17,6 +17,7 @@ class Predictor():
         self.modelManager = modelManager
         self.stockManager = stockManager
 
+        self.riskCalculator = RiskCalculator.RiskCalculator()
         self.dateMapper = PredictionDateMapper.PredictionDateMapper()
         self.model = None
 
@@ -95,14 +96,15 @@ class Predictor():
     #private
     def buildPackets(self, startDate, returns, closes, interval):
 
-        predictionPackets = []
 
+        predictionPackets = []
 
         for r, c in zip(returns, closes):
             packet = PredictionPacket.PredictionPacket(
                 date=None,
                 closePrediction=float(c),
-                pctReturn=float(r * 100)  # in percent
+                pctReturn=float(r * 100),  # in percent
+                riskScore=self.riskCalculator.calculateRisk(self.model.info, c, len(predictionPackets) + 1, interval)
             )
             predictionPackets.append(packet)
 
