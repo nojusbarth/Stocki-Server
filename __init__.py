@@ -56,12 +56,12 @@ if __name__ == "__main__":
     
     predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
 
-    setupUpdateLoopStocks()
-    setupUpdateLoopModels()
-    
-    server = Server(predictor=predictor, stockManager=stockManager)
-    
-    server.start()
+    #setupUpdateLoopStocks()
+    #setupUpdateLoopModels()
+    #
+    #server = Server(predictor=predictor, stockManager=stockManager)
+    #
+    #server.start()
 
 
 

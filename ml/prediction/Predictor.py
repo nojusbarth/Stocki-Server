@@ -1,6 +1,6 @@
 from datetime import timedelta
 from ml.pipeline import DataPreparer
-from ml.prediction import PredictionPacket
+from ml.prediction import PredictionDateMapper, PredictionPacket
 from ml import ModelManager
 
 import pandas as pd
@@ -16,11 +16,13 @@ class Predictor():
         self.dataPreparer = DataPreparer.DataPreparer()
         self.modelManager = modelManager
         self.stockManager = stockManager
+
+        self.dateMapper = PredictionDateMapper.PredictionDateMapper()
         self.model = None
 
 
     #WARNING XGBOOST AND HEURISTICS TO PREDICT NEXT DAY's DATA ARE ONLY RELIABE FOR 1-3 DAYS AHEAD
-    def predict(self, stockName, days, interval, showPlot= False):
+    def predict(self, stockName, period, interval, showPlot= False):
        
         stockData = self.stockManager.getStockData(stockName, interval)
 
@@ -32,7 +34,7 @@ class Predictor():
             return None
 
 
-        predictedReturns = self.doPrediction(stockData, days)
+        predictedReturns = self.doPrediction(stockData, period)
 
         lastClose = stockData["Close"].iloc[-1]
         
@@ -47,14 +49,14 @@ class Predictor():
 
 
         if showPlot:
-            self.showPlot(stockData, days, predictedPrices)
+            self.showPlot(stockData, period, predictedPrices)
 
         return self.buildPackets(startDate = stockData.index[-1], returns=predictedReturns, closes=predictedPrices, interval=interval)
 
 
     
     #PRIVATE FUNCTION
-    def doPrediction(self, stockData, days):
+    def doPrediction(self, stockData, period):
 
         predictedReturns = []
 
@@ -64,7 +66,7 @@ class Predictor():
         
         data = stockData.tail(34).copy()
 
-        for i in range(days):
+        for i in range(period):
 
             #y not needed for prediction
             Xdata, _ = self.dataPreparer.prepareFeatures(data, 34)
@@ -75,6 +77,8 @@ class Predictor():
             data = pd.concat([data, self.dataPreparer.createNextDayFeatures(data, nextDayPred)])
 
         return predictedReturns
+
+
 
     #PRIVATE FUNCTION
     def showPlot(self, stockData, days, predictedPrices):
@@ -88,27 +92,20 @@ class Predictor():
         plt.legend()
         plt.show()
 
-
+    #private
     def buildPackets(self, startDate, returns, closes, interval):
 
         predictionPackets = []
 
-        if interval == "1d":
-            delta = timedelta(days=1)
-            date_format = "%Y-%m-%d"
-        elif interval == "1h":
-            delta = timedelta(hours=1)
-            date_format = "%Y-%m-%d %H:%M"
-        else:
-            raise ValueError(f"Unsupported interval: {interval}")
 
         for r, c in zip(returns, closes):
-            startDate += delta
             packet = PredictionPacket.PredictionPacket(
-                date=startDate.strftime(date_format),
+                date=None,
                 closePrediction=float(c),
                 pctReturn=float(r * 100)  # in percent
             )
             predictionPackets.append(packet)
+
+        predictionPackets = self.dateMapper.mapPredictions(startDate=startDate, predictionPackets=predictionPackets, interval=interval)
 
         return predictionPackets
