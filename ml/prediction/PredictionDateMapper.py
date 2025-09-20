@@ -39,8 +39,11 @@ class PredictionDateMapper:
         else:
             raise ValueError("invalid format")
 
-        valid_times = valid_times[valid_times > startDate]
-
+        valid_times = (
+            valid_times[valid_times > startDate] 
+            if interval == "1h" 
+            else pd.DatetimeIndex([ts for ts in valid_times if ts.date() > startDate.date()])
+        )
         n_predictions = len(predictionPackets)
         if len(valid_times) < n_predictions:
             raise ValueError("not enough intervalls")
@@ -80,7 +83,7 @@ class PredictionDateMapper:
                 times = pd.date_range(
                     start=market_open,
                     end=market_close,
-                    freq="1H",
+                    freq="1h",
                     inclusive="left"
                 )
                 intervals.extend(times)

@@ -20,7 +20,7 @@ class StockUpdater:
 
         while True:
 
-            updateBatch = stockManager.getStockNames()
+            updateBatch = stockManager.getStockTickers()
             print(f"Running update for {self.interval} at {datetime.now()}")
 
             with StockUpdater.yfLock:

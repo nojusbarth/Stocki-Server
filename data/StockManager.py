@@ -114,7 +114,7 @@ class StockManager():
 
 
 
-    def getStockNames(self):
+    def getStockTickers(self):
         return self.stockDB.getAllTickers()
 
 

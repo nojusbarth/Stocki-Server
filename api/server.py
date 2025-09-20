@@ -1,5 +1,6 @@
 
 
+from api import TickerMapper
 from flask import Flask, request, jsonify
 
 
@@ -9,6 +10,7 @@ class Server:
     def __init__(self, predictor, stockManager):
         self.predictor = predictor
         self.stockManager = stockManager
+        self.tickerMap = TickerMapper.TickerMapper(self.stockManager.getStockTickers())
 
         self.app = Flask(__name__)
         self.setupRoutes()
@@ -16,10 +18,12 @@ class Server:
 
 
     def setupRoutes(self):
-        @self.app.route("/predictions/<ticker>", methods=["GET"])
-        def getPrediction(ticker):
+        @self.app.route("/predictions/<name>", methods=["GET"])
+        def getPrediction(name):
             period = int(request.args.get("period", 1))
             interval = str(request.args.get("interval", "1d"))
+
+            ticker = self.tickerMap.getTicker(name)
 
             packets = self.predictor.predict(ticker,period,interval)
 
@@ -28,12 +32,13 @@ class Server:
             return jsonify(jsonReady)
 
 
-        @self.app.route("/historical/<ticker>", methods=["GET"])
-        def getHistorical(ticker):
+        @self.app.route("/historical/<name>", methods=["GET"])
+        def getHistorical(name):
             
             period = int(request.args.get("period", 30))
             interval = str(request.args.get("interval", "1d"))
 
+            ticker = self.tickerMap.getTicker(name)
 
             data = self.stockManager.getStockData(ticker, interval).tail(period)
 
@@ -48,7 +53,14 @@ class Server:
         @self.app.route("/stocknames", methods=["GET"])
         def getStockNames():
 
-            stockNamesList = self.stockManager.getStockNames()
+            tickerList = self.stockManager.getStockTickers()
+
+            stockNamesList = []
+
+            for t in tickerList:
+                name = self.tickerMap.getName(t)
+                if name is not None:
+                    stockNamesList.append(name)
 
             return jsonify(stockNamesList)
 
