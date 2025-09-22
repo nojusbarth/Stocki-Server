@@ -11,29 +11,23 @@ from data import Stock, StockManager
 from view import MainFrame
 from windowMng import *
 from ml import ModelUpdater
-
+import queue
 import threading
 import time
 
 
-def setupUpdateLoopStocks():
-    hourUpdater = StockUpdater.StockUpdater(interval="1h")
-    dayUpdater = StockUpdater.StockUpdater(interval="1d")
+def setupUpdateLoops():
+    updateQueue = queue.Queue()
+    
+    hourStockUpdater = StockUpdater.StockUpdater(interval="1h", updateQueue=updateQueue)
+    dayStockUpdater = StockUpdater.StockUpdater(interval="1d", updateQueue=updateQueue)
 
-    hourThread = threading.Thread(target=hourUpdater.run, daemon=True)
-    dayThread = threading.Thread(target=dayUpdater.run, daemon=True)
+    modelUpdater = ModelUpdater.ModelUpdater(updateQueue=updateQueue)
 
-    hourThread.start()
-    dayThread.start()
+    threading.Thread(target=hourStockUpdater.run, daemon=True, name="StockUpdater-1h").start()
+    threading.Thread(target=dayStockUpdater.run, daemon=True, name="StockUpdater-1d").start()
+    threading.Thread(target=modelUpdater.run, daemon=True, name="ModelUpdater").start()
 
-
-def setupUpdateLoopModels():
-    hourModelUpdater = ModelUpdater.ModelUpdater(interval="1h")
-    dayModelUpdater = ModelUpdater.ModelUpdater(interval="1d")
-    hourModelThread = threading.Thread(target=hourModelUpdater.run, daemon=True)
-    dayModelThread = threading.Thread(target=dayModelUpdater.run, daemon=True)
-    hourModelThread.start()
-    dayModelThread.start()
 
 
 #
@@ -56,13 +50,11 @@ if __name__ == "__main__":
     
     predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
 
-    #setupUpdateLoopStocks()
-    #setupUpdateLoopModels()
+    setupUpdateLoops()
     #
     server = Server(predictor=predictor, stockManager=stockManager, modelManager=modelManager)
     #
     server.start()
-
 
 
     #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)

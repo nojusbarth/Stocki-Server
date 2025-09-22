@@ -49,6 +49,8 @@ class StockManager():
             auto_adjust=True
         )
     
+        updatePackages = []
+
         for ticker in tickers:
             if isinstance(newData.columns, pd.MultiIndex):
                 tickerData = newData.xs(ticker, level=1, axis=1).copy()
@@ -59,6 +61,10 @@ class StockManager():
 
             if not tickerData.empty:
                 self.stockDB.addStockData(ticker, tickerData, interval=interval)
+                updatePackages.append(self.buildUpdatePackage(ticker,tickerData,interval))
+
+        return updatePackages
+
 
 
 
@@ -88,29 +94,18 @@ class StockManager():
     def getStockData(self, name, interval):
         return self.stockDB.fetchDataSingle(name,interval)
 
+    #private
+    def buildUpdatePackage(self, ticker, data, interval):
+        if interval == "1d":
+            timeStr = data.index[-1].strftime("%Y-%m-%d")
+        elif interval == "1h":
+            timeStr = data.index[-1].strftime("%Y-%m-%d %H")
+        return StockUpdateInfo.StockUpdateInfo(
+            stockName=ticker,
+            latestUpdateTime=timeStr,
+            interval=interval
+        )
 
-    def getLatestUpdateInfo(self, interval):
-
-        intervalInfo = []
-    
-        for ticker in self.stockDB.getAllTickers():
-            latestTime = self.stockDB.getLatestUpdateTime(ticker, interval)
-            if latestTime is not None:
-                if interval == "1d":
-                    timeStr = latestTime.strftime("%Y-%m-%d")
-                elif interval == "1h":
-                    timeStr = latestTime.strftime("%Y-%m-%d %H")
-                
-    
-                intervalInfo.append(
-                    StockUpdateInfo.StockUpdateInfo(
-                        stockName=ticker,
-                        latestUpdateTime=timeStr,
-                        interval=interval
-                    )
-                )
-   
-        return intervalInfo
 
 
 

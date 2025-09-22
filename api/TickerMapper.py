@@ -1,9 +1,9 @@
 
 import pandas as pd
+import locks
 import yfinance as yf
 from pathlib import Path
 from datetime import datetime
-import re
 
 
 class TickerMapper:
@@ -21,7 +21,8 @@ class TickerMapper:
     #private
     def updateCSV(self, tickers):
 
-        tickersObj = yf.Tickers(" ".join(tickers))
+        with locks.yfLock:
+            tickersObj = yf.Tickers(" ".join(tickers))
         
         rows = []
 

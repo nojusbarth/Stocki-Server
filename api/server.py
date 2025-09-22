@@ -75,5 +75,16 @@ class Server:
 
             return jsonify(vars(info))
 
+        @self.app.route("/predictionsall/", methods=["GET"])
+        def getAllPredictions():
+            interval = str(request.args.get("interval", "1d"))
+
+            allPreds = self.predictor.predictAll(interval)
+
+            jsonReady = {self.tickerMap.getName(ticker): vars(packet) 
+                         for ticker, packet in allPreds.items() if self.tickerMap.getName(ticker) is not None}
+            return jsonify(jsonReady)
+
+
     def start(self):
-        self.app.run(debug=False)
+        self.app.run(host="0.0.0.0", port=5000, debug=False)

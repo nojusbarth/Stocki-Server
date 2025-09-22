@@ -9,7 +9,6 @@ class RiskCalculator:
 
         rmse = modelInfo.metrics["RMSE"]
         mae = modelInfo.metrics["MAE"]
-        r2 = modelInfo.metrics["R2"]
 
         errorGrowthFactor = futureStep ** 0.5  
         adjustedRmse = rmse * errorGrowthFactor
@@ -21,10 +20,7 @@ class RiskCalculator:
         baseError = (relRmse + relMae) / 2
 
         score = baseError * 100 / maxRelError
-        score = min(score, 100)
 
-        r2Factor = 1 + max(0, 1 - r2)
-        score *= r2Factor
         score = min(score, 100)
 
         return int(score)

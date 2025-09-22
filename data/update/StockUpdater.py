@@ -3,15 +3,16 @@ from time import sleep
 from data import StockManager
 import threading
 
+import locks
+
 
 class StockUpdater:
     
-    #allow only one yf call at a time
-    yfLock = threading.Lock()
 
 
-    def __init__(self, interval):
+    def __init__(self, interval, updateQueue):
         self.interval = interval
+        self.queue = updateQueue
 
 
     def run(self):
@@ -23,13 +24,16 @@ class StockUpdater:
             updateBatch = stockManager.getStockTickers()
             print(f"Running update for {self.interval} at {datetime.now()}")
 
-            with StockUpdater.yfLock:
-                stockManager.updateStocks(self.interval, updateBatch)
+            with locks.yfLock:
+                updatedStocks = stockManager.updateStocks(self.interval, updateBatch)
+
+                if updatedStocks:
+                    self.queue.put(updatedStocks)
+
+       
 
             sleepSeconds = self.calculateSleepSeconds()
-
             print(f"Update complete. Sleeping for {sleepSeconds/60:.2f} minutes.")
-
             sleep(sleepSeconds)
 
 

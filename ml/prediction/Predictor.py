@@ -22,6 +22,17 @@ class Predictor():
         self.model = None
 
 
+    def predictAll(self, interval):
+        stockTickers = self.stockManager.getStockTickers()
+        allPredictions = {}
+        for ticker in stockTickers:
+            print(f"Predicting for {ticker}...")
+            packet = self.predict(ticker, period=1, interval=interval, showPlot=False)[0]
+            if packet is not None:
+                allPredictions[ticker] = packet
+        return allPredictions
+
+
     #WARNING XGBOOST AND HEURISTICS TO PREDICT NEXT DAY's DATA ARE ONLY RELIABE FOR 1-3 DAYS AHEAD
     def predict(self, stockName, period, interval, showPlot= False):
        

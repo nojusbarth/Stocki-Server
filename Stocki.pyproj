@@ -23,6 +23,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="api\TickerMapper.py" />
+    <Compile Include="locks.py" />
     <Compile Include="ml\prediction\PredictionDateMapper.py" />
     <Compile Include="api\server.py" />
     <Compile Include="api\__init__.py" />
