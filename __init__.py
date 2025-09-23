@@ -30,7 +30,6 @@ def setupUpdateLoops(predictionRepository):
     threading.Thread(target=modelUpdater.run, daemon=True, name="ModelUpdater").start()
 
 #TODO: Minuten aggregierungstrick testen: bei yf update 1m wenn 1h gegeben und dann pd aggregieren
-#TODO: Get last predictions macht keinen sinn, muss nach datum gehen, z.B. alle Predictions mit stap max 3 die auf ... fallen nach steps gegliedert
 #TODO: FLASK THREADS CRASHEN AUCH BEI PARRALELEM DB ZUGRIFF: Lösung: Einfach immer neuen Cursor in den Funktionen machen, conn aus einem pool holen
 
 #

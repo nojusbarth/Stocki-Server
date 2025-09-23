@@ -2,21 +2,23 @@
 
 class StockWriter:
 
-    def __init__(self, cursor, conn):
-        self.cursor = cursor
-        self.conn = conn
+    def __init__(self, pool):
+        self.pool = pool
 
 
 
     def addStockData(self, stockName, stockData, interval, table):
 
+        conn = self.pool.get_connection()
+        cursor = conn.cursor()
+
         print(f"Adding entries for {stockName} [interval = {interval}] into {table}...")
 
-        self.cursor.execute(
+        cursor.execute(
             f"SELECT COUNT(*) FROM {table}"
         )
 
-        numEntriesBefore = self.cursor.fetchone()[0]
+        numEntriesBefore = cursor.fetchone()[0]
 
         cols = ", ".join(stockData.columns)
         placeholders = ", ".join(["%s"] * len(stockData.columns))
@@ -26,12 +28,15 @@ class StockWriter:
         values = [tuple(x) for x in stockData.to_numpy()]
 
         if values:
-            self.cursor.executemany(query, values)
-            self.conn.commit()
+            cursor.executemany(query, values)
+            conn.commit()
 
-        self.cursor.execute(f"SELECT COUNT(*) FROM {table}")
-        numEntriesAfter = self.cursor.fetchone()[0]
+        cursor.execute(f"SELECT COUNT(*) FROM {table}")
+        numEntriesAfter = cursor.fetchone()[0]
 
         addedRows = numEntriesAfter - numEntriesBefore
 
         print(f"Added {addedRows} new entries to {stockName} [interval = {interval}] in {table}")
+
+        cursor.close()
+        conn.close()

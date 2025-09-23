@@ -9,25 +9,31 @@ from data.database import StockReader, StockWriter, TransformerDB
 
 class StockDB:
 
+    _pool = None
+
     def __init__(self):
 
         load_dotenv()        
         
-        self.conn = mysql.connector.connect(
-            host=os.getenv("MYSQL_HOST"),
-            user=os.getenv("MYSQL_USER"),
-            password=os.getenv("MYSQL_PASSWORD"),
-            database=os.getenv("MYSQL_DBSTOCKS")
-        )
+        if StockDB._pool is None:
+            StockDB._pool = mysql.connector.pooling.MySQLConnectionPool(
+                pool_name="stockpool",
+                pool_size=5,
+                host=os.getenv("MYSQL_HOST"),
+                user=os.getenv("MYSQL_USER"),
+                password=os.getenv("MYSQL_PASSWORD"),
+                database=os.getenv("MYSQL_DBSTOCKS")
+            )
 
-        self.cursor = self.conn.cursor()
+        self.pool = StockDB._pool
+
 
         self.columnsDB = ["ticker", "date", "open", "high", "low", "close", "volume"]
         self.columnsDF = ["Open", "High", "Low", "Close", "Volume"]
 
         self.dbTranformer = TransformerDB.TransformerDB(self.columnsDB, self.columnsDF)
-        self.dbWriter = StockWriter.StockWriter(self.cursor, self.conn)
-        self.dbReader = StockReader.StockReader(self.cursor, self.conn)
+        self.dbWriter = StockWriter.StockWriter(self.pool)
+        self.dbReader = StockReader.StockReader(self.pool)
 
 
     def fetchDataSingle(self, ticker, interval):

@@ -5,24 +5,34 @@ from dotenv import load_dotenv
 from mysql.connector import Error
 
 from ml.prediction import PredictionPacket
+from mysql.connector import pooling
+
 
 
 class PredictionDB:
 
+    _pool = None
+
     def __init__(self):
         load_dotenv()        
         
-        self.conn = mysql.connector.connect(
-            host=os.getenv("MYSQL_HOST"),
-            user=os.getenv("MYSQL_USER"),
-            password=os.getenv("MYSQL_PASSWORD"),
-            database=os.getenv("MYSQL_DBPREDICTIONS")
-        )
-
-        self.cursor = self.conn.cursor(dictionary=True)
+        if PredictionDB._pool is None:
+            PredictionDB._pool = mysql.connector.pooling.MySQLConnectionPool(
+                pool_name="predictionpool",
+                pool_size=5,
+                host=os.getenv("MYSQL_HOST"),
+                user=os.getenv("MYSQL_USER"),
+                password=os.getenv("MYSQL_PASSWORD"),
+                database=os.getenv("MYSQL_DBPREDICTIONS")
+            )
+            self.pool = PredictionDB._pool
 
 
     def savePrediction(self, stockName, interval, predictionPacketList):
+        
+        conn = self.pool.get_connection()
+        cursor = conn.cursor(dictionary=True)
+
         table = self.getTableName(interval)
         query = f"""
         INSERT INTO {table} (ticker, date, step, pctReturn, closePrediction, riskScore)
@@ -34,6 +44,7 @@ class PredictionDB:
         """
     
         try:
+
             for i, predictionPacket in enumerate(predictionPacketList):
                 step = i + 1
                 values = (
@@ -44,15 +55,22 @@ class PredictionDB:
                     predictionPacket.closePrediction,
                     predictionPacket.riskScore
                 )
-                self.cursor.execute(query, values)
+                cursor.execute(query, values)
     
-            self.conn.commit()
+            conn.commit()
     
         except Error as e:
             print(f"Error saving predictions for {stockName}: {e}")
+
+        finally:
+            cursor.close()
+            conn.close()
     
     
     def loadPredictionForDates(self, stockName, dates, interval, step):
+        conn = self.pool.get_connection()
+        cursor = conn.cursor(dictionary=True)
+
         table = self.getTableName(interval)
         result = {}
     
@@ -63,8 +81,8 @@ class PredictionDB:
             WHERE ticker=%s AND date=%s AND step=%s
             """
             try:
-                self.cursor.execute(query, (stockName.upper(), date, step))
-                row = self.cursor.fetchone()
+                cursor.execute(query, (stockName.upper(), date, step))
+                row = cursor.fetchone()
     
                 if row:
                     pkt = PredictionPacket.PredictionPacket(
@@ -80,19 +98,25 @@ class PredictionDB:
             except Error as e:
                 print(f"Error loading prediction for {stockName} on {date}: {e}")
                 result[date] = None
-    
+
+        cursor.close()
+        conn.close()            
+
         return result
     
 
     
     
     def loadAllCurrent(self, interval, steps=[1, 2, 3]):
+        conn = self.pool.get_connection()
+        cursor = conn.cursor(dictionary=True)        
+        
         table = self.getTableName(interval)
         resultCache = {}
     
         try:
-            self.cursor.execute(f"SELECT DISTINCT ticker FROM {table}")
-            tickers = [row['ticker'] for row in self.cursor.fetchall()]
+            cursor.execute(f"SELECT DISTINCT ticker FROM {table}")
+            tickers = [row['ticker'] for row in cursor.fetchall()]
     
             for ticker in tickers:
                 resultCache[ticker] = {}
@@ -105,8 +129,8 @@ class PredictionDB:
                     ORDER BY date DESC
                     LIMIT 1
                     """
-                    self.cursor.execute(query, (ticker, step))
-                    row = self.cursor.fetchone()
+                    cursor.execute(query, (ticker, step))
+                    row = cursor.fetchone()
                     if row:
                         pkt = PredictionPacket.PredictionPacket(
                             date=row['date'],
@@ -121,6 +145,10 @@ class PredictionDB:
         except Error as e:
             print(f"Error loading all current predictions: {e}")
             return {}
+
+        finally:
+            cursor.close()
+            conn.close()   
 
 
     #private

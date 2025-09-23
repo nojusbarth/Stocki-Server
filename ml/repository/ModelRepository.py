@@ -2,13 +2,18 @@
 
 from pathlib import Path
 from ml.repository import ModelDB, ModelFiles
+from dotenv import load_dotenv
+import os
 
 
 class ModelRepository:
 
     def __init__(self):
 
-        self.rootPath = Path(r"C:\Users\nojob\Programmieren\Visual Studio\python\Stocki\project\predictionModels")
+        load_dotenv()
+        
+
+        self.rootPath = Path(os.getenv("PATH_MODELS"))
 
         self.modelFiler = ModelFiles.ModelFiles()
         self.modelDB = ModelDB.ModelDB()
