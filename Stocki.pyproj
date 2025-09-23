@@ -22,8 +22,10 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="api\AccuracyPackager.py" />
     <Compile Include="api\TickerMapper.py" />
     <Compile Include="locks.py" />
+    <Compile Include="ml\prediction\AccuracyPacket.py" />
     <Compile Include="ml\prediction\PredictionDateMapper.py" />
     <Compile Include="api\server.py" />
     <Compile Include="api\__init__.py" />
@@ -42,6 +44,9 @@
     <Compile Include="lineFit.py" />
     <Compile Include="ml\ModelUpdater.py" />
     <Compile Include="ml\pipeline\DataPreparer.py" />
+    <Compile Include="ml\prediction\repository\PredictionDB.py" />
+    <Compile Include="ml\prediction\repository\PredictionRepository.py" />
+    <Compile Include="ml\prediction\repository\__init__.py" />
     <Compile Include="ml\prediction\RiskCalculator.py" />
     <Compile Include="ml\repository\ModelFiles.py" />
     <Compile Include="ml\ModelManager.py" />
@@ -82,6 +87,7 @@
     <Folder Include="data\" />
     <Folder Include="data\database\" />
     <Folder Include="data\update\" />
+    <Folder Include="ml\prediction\repository\" />
     <Folder Include="ml\repository\" />
     <Folder Include="ml\pipeline\" />
     <Folder Include="ml\" />

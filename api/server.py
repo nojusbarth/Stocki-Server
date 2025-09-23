@@ -1,17 +1,18 @@
 
 
-from api import TickerMapper
+from api import AccuracyPackager, TickerMapper
 from flask import Flask, request, jsonify
 
 
 
 class Server:
 
-    def __init__(self, predictor, stockManager, modelManager):
-        self.predictor = predictor
+    def __init__(self, predictonRep, stockManager, modelManager):
+        self.predictonRep = predictonRep
         self.stockManager = stockManager
         self.modelManager = modelManager
         self.tickerMap = TickerMapper.TickerMapper(self.stockManager.getStockTickers())
+        self.accuracyPackager = AccuracyPackager.AccuracyPackager(stockManager, predictonRep)
 
         self.app = Flask(__name__)
         self.setupRoutes()
@@ -21,12 +22,11 @@ class Server:
     def setupRoutes(self):
         @self.app.route("/predictions/<name>", methods=["GET"])
         def getPrediction(name):
-            period = int(request.args.get("period", 1))
             interval = str(request.args.get("interval", "1d"))
 
             ticker = self.tickerMap.getTicker(name)
 
-            packets = self.predictor.predict(ticker,period,interval)
+            packets = self.predictonRep.getLatestPrediction(ticker,interval)
 
             jsonReady = [vars(p) for p in packets]
 
@@ -79,12 +79,24 @@ class Server:
         def getAllPredictions():
             interval = str(request.args.get("interval", "1d"))
 
-            allPreds = self.predictor.predictAll(interval)
+            allPreds = self.predictonRep.getAllLatestPredictions(self.stockManager.getStockTickers(), interval)
 
             jsonReady = {self.tickerMap.getName(ticker): vars(packet) 
                          for ticker, packet in allPreds.items() if self.tickerMap.getName(ticker) is not None}
             return jsonify(jsonReady)
 
+        @self.app.route("/accuracy/<name>", methods=["GET"])
+        def getLastPredictions(name):
+            interval = str(request.args.get("interval", "1d"))
+            period = int(request.args.get("period", 5))
+
+            ticker = self.tickerMap.getTicker(name)
+            historicals = self.accuracyPackager.buildPackets(ticker, interval, period)
+
+            jsonReady = {key: [vars(pkt) if pkt is not None else None for pkt in pkts] 
+                         for key, pkts in historicals.items()}
+
+            return jsonify(jsonReady)
 
     def start(self):
         self.app.run(host="0.0.0.0", port=5000, debug=False)

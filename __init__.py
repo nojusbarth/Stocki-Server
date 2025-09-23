@@ -8,6 +8,7 @@ from data.update import StockUpdater
 from ml.prediction import Predictor
 from ml.ModelManager import ModelManager
 from data import Stock, StockManager
+from ml.prediction.repository import PredictionRepository
 from view import MainFrame
 from windowMng import *
 from ml import ModelUpdater
@@ -16,19 +17,21 @@ import threading
 import time
 
 
-def setupUpdateLoops():
+def setupUpdateLoops(predictionRepository):
     updateQueue = queue.Queue()
     
     hourStockUpdater = StockUpdater.StockUpdater(interval="1h", updateQueue=updateQueue)
     dayStockUpdater = StockUpdater.StockUpdater(interval="1d", updateQueue=updateQueue)
 
-    modelUpdater = ModelUpdater.ModelUpdater(updateQueue=updateQueue)
+    modelUpdater = ModelUpdater.ModelUpdater(updateQueue=updateQueue, predictionRepository=predictionRepository)
 
     threading.Thread(target=hourStockUpdater.run, daemon=True, name="StockUpdater-1h").start()
     threading.Thread(target=dayStockUpdater.run, daemon=True, name="StockUpdater-1d").start()
     threading.Thread(target=modelUpdater.run, daemon=True, name="ModelUpdater").start()
 
-
+#TODO: Minuten aggregierungstrick testen: bei yf update 1m wenn 1h gegeben und dann pd aggregieren
+#TODO: Get last predictions macht keinen sinn, muss nach datum gehen, z.B. alle Predictions mit stap max 3 die auf ... fallen nach steps gegliedert
+#TODO: FLASK THREADS CRASHEN AUCH BEI PARRALELEM DB ZUGRIFF: Lösung: Einfach immer neuen Cursor in den Funktionen machen, conn aus einem pool holen
 
 #
 if __name__ == "__main__":
@@ -50,11 +53,14 @@ if __name__ == "__main__":
     
     predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
 
-    setupUpdateLoops()
-    #
-    server = Server(predictor=predictor, stockManager=stockManager, modelManager=modelManager)
-    #
+    predictionRepository = PredictionRepository.PredictionRepository(predictor=predictor)
+
+    #setupUpdateLoops(predictionRepository)
+    
+    server = Server(predictionRepository, stockManager=stockManager, modelManager=modelManager)
+    
     server.start()
+
 
 
     #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)

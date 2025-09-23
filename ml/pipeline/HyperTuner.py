@@ -29,7 +29,7 @@ class HyperTuner:
         self.trainingDataY = trainingDataY
 
         print("Starting hyperparameter tuning with early stopping...")
-
+        optuna.logging.set_verbosity(optuna.logging.WARNING)
         study = optuna.create_study(direction="minimize")
         study.optimize(self.objective, n_trials=100)
 

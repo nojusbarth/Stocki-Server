@@ -10,8 +10,9 @@ import queue
 class ModelUpdater:
 
 
-    def __init__(self, updateQueue):
+    def __init__(self, updateQueue, predictionRepository):
         self.queue = updateQueue
+        self.predictionRep = predictionRepository
         self.queueTimeOutTime=10 #seconds
 
     
@@ -35,10 +36,11 @@ class ModelUpdater:
                                                     stockInfo.interval, version="test", 
                                                     hyperTune=True, 
                                                     showStats=False)
+                        self.predictionRep.updatePrediction(stockInfo.stockName, stockInfo.interval)
                         print(f"{stockInfo.interval}, {stockInfo.stockName} model update complete.")
 
                 self.queue.task_done()
 
 
             except queue.Empty:
-                print("No Updates found for modelUpdater")
+                continue
