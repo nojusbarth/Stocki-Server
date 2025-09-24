@@ -12,7 +12,6 @@ class ModelFiles:
     def loadModel(self, modelPath, scalerPath, infoPath):
         model = XGBRegressor()
 
-        print(f"Loading model from {modelPath}:")
 
         try:
             model.load_model(modelPath)
@@ -21,8 +20,6 @@ class ModelFiles:
             print(f"Error loading model from {modelPath}: {e}")
             return None
 
-
-        print(f"Model from {modelPath} loaded successfully.")
 
 
         scaler = None
@@ -66,7 +63,6 @@ class ModelFiles:
     def saveModel(self, model, rootDirectory):
 
         rootDirectory.mkdir(parents=True, exist_ok=True)
-        print(f"Saving model to {rootDirectory}:")
 
         modelPath = os.path.join(rootDirectory, "model_pred.json")
         scalerPath = os.path.join(rootDirectory, "model_scaler.joblib")
@@ -94,7 +90,6 @@ class ModelFiles:
             print(f"Error saving info: {e}")
             return None
 
-        print(f"Model saved successfully to {rootDirectory}.")
 
         return {
             "model_path": modelPath,

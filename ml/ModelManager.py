@@ -10,13 +10,15 @@ from ml.pipeline import DataPreparer
 
 from ml.pipeline import ModelMaker
 from ml.repository import ModelRepository
-
+import logging
+import threading
 
 class ModelManager:
 
     def __init__(self):
         self.modelRepository = ModelRepository.ModelRepository()
         self.modelMaker = ModelMaker.ModelMaker()
+        self.logger = logging.getLogger("model")
 
 
 
@@ -25,6 +27,15 @@ class ModelManager:
         #model pipeline
         modelDev, modelProd = self.modelMaker.createModel(stockData, interval, hyperTune=hyperTune, showStats=showStats)
         
+        self.logger.info({
+            "event": "model_creation_finished",
+            "message": f"Creation of Model {stockName} finished",
+            "model_name": stockName,
+            "interval": interval,
+            "metrics": modelDev.getInfo().metrics,
+            "hyperparameters": modelDev.getInfo().hyperParameters,
+            "thread": threading.current_thread().name
+        })
 
         self.modelRepository.saveModel(modelDev, stockName, interval, version, "dev")
         self.modelRepository.saveModel(modelProd, stockName, interval, version, "production")
@@ -35,7 +46,13 @@ class ModelManager:
 
         model = self.modelRepository.loadModel(stockName, interval, "production", "test")
         if model is None:
-            print(f"No saved model found for stock {stockName}.")
+            self.logger.info({
+                "event": "model_miss",
+                "message": f"no fitting model for {stockName} found",
+                "model_name": stockName,
+                "interval": interval,
+                "thread": threading.current_thread().name
+            })
             return None
         return model
 

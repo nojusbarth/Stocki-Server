@@ -41,7 +41,6 @@ class ModelDB:
 
         conn.commit()
 
-        print(f"registered model {name} to db")
 
         cursor.close()
         conn.close()

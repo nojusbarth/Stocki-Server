@@ -21,12 +21,6 @@ class ModelEvaluator():
         mae  = mean_absolute_error(yTruePrice, yPredPrice)
         r2   = r2_score(yTruePrice, yPredPrice)
 
-
-        print(f"model evaluation results:")
-        print("RMSE:", rmse)
-        print("MAE:", mae)
-        print("R squared:", r2)
-
         if showPlot:
             self.showPlot(yTruePrice, yPredPrice)
 

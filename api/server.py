@@ -1,13 +1,16 @@
 
 
 from api import AccuracyPackager, TickerMapper
-from flask import Flask, request, jsonify
-
-
+from flask import Flask, request, jsonify, g
+import time
+import threading
+import logging
 
 class Server:
 
     def __init__(self, predictonRep, stockManager, modelManager):
+        self.logger = logging.getLogger("api")
+        
         self.predictonRep = predictonRep
         self.stockManager = stockManager
         self.modelManager = modelManager
@@ -15,8 +18,42 @@ class Server:
         self.accuracyPackager = AccuracyPackager.AccuracyPackager(stockManager, predictonRep)
 
         self.app = Flask(__name__)
+        self.setupLoggingHooks() 
         self.setupRoutes()
 
+
+
+
+    def setupLoggingHooks(self):
+        @self.app.before_request
+        def start_timer():
+            g.start_time = time.time()
+
+        @self.app.after_request
+        def log_request(response):
+            duration = time.time() - g.start_time
+            self.logger.info({
+                "event": "request_completed",
+                "path": request.path,
+                "method": request.method,
+                "status": response.status_code,
+                "duration_s": round(duration, 4),
+                "thread": threading.current_thread().name
+            })
+            return response
+
+        @self.app.errorhandler(Exception)
+        def handle_exception(e):
+            duration = time.time() - g.start_time if hasattr(g, "start_time") else None
+            self.logger.exception({
+                "event": "exception",
+                "path": request.path if request else None,
+                "method": request.method if request else None,
+                "duration_s": round(duration, 4) if duration else None,
+                "thread": threading.current_thread().name,
+                "exception": str(e)
+            })
+            return {"error": str(e)}, 500
 
 
     def setupRoutes(self):
@@ -98,3 +135,7 @@ class Server:
 
     def start(self):
         self.app.run(host="0.0.0.0", port=5000, debug=False)
+
+    def shutdown(self):
+        if Server._instances == 0 and Server.app_logger_instance:
+            Server.app_logger_instance.stop_listener()

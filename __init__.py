@@ -5,6 +5,7 @@ from tkinter import ttk
 from api.server import Server
 from data.database import StockDB
 from data.update import StockUpdater
+from logger import setup_logging
 from ml.prediction import Predictor
 from ml.ModelManager import ModelManager
 from data import Stock, StockManager
@@ -15,6 +16,7 @@ from ml import ModelUpdater
 import queue
 import threading
 import time
+import atexit
 
 
 def setupUpdateLoops(predictionRepository):
@@ -29,7 +31,8 @@ def setupUpdateLoops(predictionRepository):
     threading.Thread(target=dayStockUpdater.run, daemon=True, name="StockUpdater-1d").start()
     threading.Thread(target=modelUpdater.run, daemon=True, name="ModelUpdater").start()
 
-#
+
+#TODO: ERSTER TICKER STIRBT BEI TABELLE
 if __name__ == "__main__":
     
     # root
@@ -42,22 +45,22 @@ if __name__ == "__main__":
     #wm = WindowMng(root)
         
     #root.mainloop()
-
-    #Alles Datetime machen in UTC
     
+
+    setup_logging()
+
     stockManager = StockManager.StockManager()
     modelManager = ModelManager()
-    
     predictor = Predictor.Predictor(modelManager=modelManager,stockManager=stockManager)
-
     predictionRepository = PredictionRepository.PredictionRepository(predictor=predictor)
-
+    
 
     setupUpdateLoops(predictionRepository)
     
-    #server = Server(predictionRepository, stockManager=stockManager, modelManager=modelManager)
-    
-    #server.start()
+
+
+    server = Server(predictionRepository, stockManager=stockManager, modelManager=modelManager)
+    server.start()
 
     #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)
     #frame.run()

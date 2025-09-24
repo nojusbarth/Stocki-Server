@@ -64,6 +64,7 @@
     <Compile Include="ml\repository\ModelRepository.py" />
     <Compile Include="ml\repository\__init__.py" />
     <Compile Include="ml\__init__.py" />
+    <Compile Include="logger.py" />
     <Compile Include="view\MainFrame.py" />
     <Compile Include="view\__init__.py" />
     <Compile Include="__init__.py" />

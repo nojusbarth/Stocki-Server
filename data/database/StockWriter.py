@@ -12,7 +12,6 @@ class StockWriter:
         conn = self.pool.get_connection()
         cursor = conn.cursor()
 
-        print(f"Adding entries for {stockName} [interval = {interval}] into {table}...")
 
         cursor.execute(
             f"SELECT COUNT(*) FROM {table}"
@@ -36,7 +35,7 @@ class StockWriter:
 
         addedRows = numEntriesAfter - numEntriesBefore
 
-        print(f"Added {addedRows} new entries to {stockName} [interval = {interval}] in {table}")
-
         cursor.close()
         conn.close()
+
+        return addedRows

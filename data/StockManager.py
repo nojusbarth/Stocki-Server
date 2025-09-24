@@ -7,7 +7,8 @@ import yfinance as yf
 from data import Stock
 from pathlib import Path
 import locks
-
+import logging
+import threading
 
 class StockManager():
 
@@ -17,6 +18,7 @@ class StockManager():
         self.latestFetchPointDaily = "2020-01-01"
         #using period for hourly request because its easier
         self.fetchPeriodHourly = "60d"
+        self.logger = logging.getLogger("stock")
 
         
 
@@ -34,18 +36,15 @@ class StockManager():
                 lastUpdates.append(lastUpdate)
 
         if not tickersToUpdate:
-            print(f"No stocks need updating for interval {interval}.")
+            self.logger.info(f"No stocks to update for interval {interval}.")
             return
 
-        latestUpdate = min(lastUpdates) if lastUpdates else currentTime
-
-
-        print(f"Updating [interval={interval}] stocks: {tickers}")
-    
+        latestUpdate = min(lastUpdates) if lastUpdates else currentTime    
 
         newData = self.downloadData(tickersToUpdate, latestUpdate, currentTime, interval)
 
         updatePackages = []
+        addedRows = 0
 
         for ticker in tickersToUpdate:
             if isinstance(newData.columns, pd.MultiIndex):
@@ -66,9 +65,19 @@ class StockManager():
             
             tickerData = self.cleanUpdateData(tickerData)
             if not tickerData.empty:
-                self.stockDB.addStockData(ticker, tickerData, interval=interval)
-                updatePackages.append(self.buildUpdatePackage(ticker,tickerData,interval))
+                addedRowsStock= self.stockDB.addStockData(ticker, tickerData, interval=interval)
+                
+                if addedRowsStock > 0:
+                    updatePackages.append(self.buildUpdatePackage(ticker,tickerData,interval))
+                    addedRows += addedRowsStock
 
+        self.logger.info({
+            "event": "stock_update_finished",
+            "message": f"stock update for interval {interval} finished",
+            "stock_names": tickersToUpdate,
+            "added_rows": addedRows,
+            "thread": threading.current_thread().name
+        })
         return updatePackages
 
 
@@ -154,8 +163,8 @@ class StockManager():
 
                 newData = yf.download(
                     tickers=tickersToUpdate,
-                    start=latestUpdate,
-                    end=currentTime,
+                    start=latestUpdate.date(),
+                    end=currentTime.date(),
                     interval=interval,
                     auto_adjust=True
                 )

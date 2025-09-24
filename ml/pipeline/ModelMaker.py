@@ -4,7 +4,7 @@ from ml.pipeline import ModelTrainer
 from ml.pipeline import ModelEvaluator
 from ml.pipeline import HyperTuner
 from ml import Model
-
+import logging
 
 from xgboost import XGBRegressor
 from sklearn.preprocessing import MinMaxScaler
@@ -12,6 +12,7 @@ from datetime import datetime
 
 class ModelMaker:
     def __init__(self):
+
        self.modelTrainer = ModelTrainer.ModelTrainer()
        self.modelEvaluator = ModelEvaluator.ModelEvaluator()
        self.dataPreparer = DataPreparer.DataPreparer()

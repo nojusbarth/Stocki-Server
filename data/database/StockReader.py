@@ -27,15 +27,12 @@ class StockReader:
 
         stockMap: dict[str, pd.DataFrame] = {}
 
-        print(f"Loading stocks from database with intervall set to: {interval}")
-
 
         if tickers is None:
             tickers = cursor.execute(f"SELECT DISTINCT ticker FROM {table}").fetchall()
             tickers = [t[0] for t in tickers]  # Flatten
 
         for ticker in tickers:
-            print(f"Loading stock: {ticker}")
             df = pd.read_sql_query(
                 f"SELECT * FROM {table} WHERE ticker=%s ORDER BY date",
                 self.engine,
@@ -43,10 +40,6 @@ class StockReader:
             )
 
             stockMap[ticker] = df
-
-
-
-        print(f"{len(stockMap)} stocks loaded successfully.")
 
         cursor.close()
         conn.close()

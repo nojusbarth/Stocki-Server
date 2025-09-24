@@ -2,9 +2,9 @@ from datetime import datetime, timedelta
 from time import sleep
 from data import StockManager
 import threading
-
+import time
 import locks
-
+import logging
 
 class StockUpdater:
     
@@ -13,6 +13,7 @@ class StockUpdater:
     def __init__(self, interval, updateQueue):
         self.interval = interval
         self.queue = updateQueue
+        self.logger = logging.getLogger("stock")
 
 
     def run(self):
@@ -20,19 +21,25 @@ class StockUpdater:
         stockManager = StockManager.StockManager()
 
         while True:
-
+            start_time = time.time()
             updateBatch = stockManager.getStockTickers()
-            print(f"Running update for {self.interval} at {datetime.now()}")
 
             updatedStocks = stockManager.updateStocks(self.interval, updateBatch)
 
             if updatedStocks:
                 self.queue.put(updatedStocks)
 
-       
+                update_duration = time.time() - start_time
+
+                self.logger.info({
+                    "event": "stock_update_complete",
+                    "interval": self.interval,
+                    "update_duration_s": round(update_duration, 2),
+                    "sleep_s": self.calculateSleepSeconds(),
+                    "thread": threading.current_thread().name
+                })
 
             sleepSeconds = self.calculateSleepSeconds()
-            print(f"Update complete. Sleeping for {sleepSeconds/60:.2f} minutes.")
             sleep(sleepSeconds)
 
 
