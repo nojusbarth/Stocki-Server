@@ -25,10 +25,9 @@ class Server:
             interval = str(request.args.get("interval", "1d"))
 
             ticker = self.tickerMap.getTicker(name)
-
             packets = self.predictonRep.getLatestPrediction(ticker,interval)
 
-            jsonReady = [vars(p) for p in packets]
+            jsonReady = [p.toDict() for p in packets]
 
             return jsonify(jsonReady)
 
@@ -43,9 +42,7 @@ class Server:
 
             data = self.stockManager.getStockData(ticker, interval).tail(period)
 
-            dateFormat = "%Y-%m-%d" if interval == "1d" else "%Y-%m-%d %H:%M"
-
-            result = [{"date": index.strftime(dateFormat), "close": row["Close"]} 
+            result = [{"date": index.isoformat(), "close": row["Close"]} 
               for index, row in data.iterrows()]
             
             
@@ -73,7 +70,7 @@ class Server:
 
             info = self.modelManager.getModelInfo(ticker, interval)
 
-            return jsonify(vars(info))
+            return jsonify(info.toDict())
 
         @self.app.route("/predictionsall/", methods=["GET"])
         def getAllPredictions():
@@ -81,9 +78,10 @@ class Server:
 
             allPreds = self.predictonRep.getAllLatestPredictions(self.stockManager.getStockTickers(), interval)
 
-            jsonReady = {self.tickerMap.getName(ticker): vars(packet) 
+            jsonReady = {self.tickerMap.getName(ticker): packet.toDict()
                          for ticker, packet in allPreds.items() if self.tickerMap.getName(ticker) is not None}
             return jsonify(jsonReady)
+
 
         @self.app.route("/accuracy/<name>", methods=["GET"])
         def getLastPredictions(name):
@@ -93,7 +91,7 @@ class Server:
             ticker = self.tickerMap.getTicker(name)
             historicals = self.accuracyPackager.buildPackets(ticker, interval, period)
 
-            jsonReady = {key: [vars(pkt) if pkt is not None else None for pkt in pkts] 
+            jsonReady = {key: [pkt if pkt is not None else None for pkt in pkts] 
                          for key, pkts in historicals.items()}
 
             return jsonify(jsonReady)

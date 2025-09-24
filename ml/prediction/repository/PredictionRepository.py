@@ -8,7 +8,7 @@ class PredictionRepository:
     def __init__(self, predictor):
         self.predictionsDB = PredictionDB.PredictionDB()
         self.predictor = predictor
-        self.lock = threading.Lock()
+        self.chacheLock = threading.Lock()
 
 
         self.currentPredictionsHour = self.predictionsDB.loadAllCurrent("1h")
@@ -24,21 +24,22 @@ class PredictionRepository:
     def getLatestPrediction(self, stockName, interval):
 
         currentPredictions = self.currentPredictionsHour if interval == "1h" else self.currentPredictionsDay
-        with self.lock:
-            if stockName in currentPredictions:
-                stepDict = currentPredictions[stockName]
-                prediction_list = [stepDict[step] for step in sorted(stepDict.keys())]
-                return prediction_list
-            else:
-                predictions = self.predictor.predict(stockName, 3, interval)
-                self.predictionsDB.savePrediction(stockName, interval, predictions)
 
+        if stockName in currentPredictions:
+            stepDict = currentPredictions[stockName]
+            prediction_list = [stepDict[step] for step in sorted(stepDict.keys())]
+            return prediction_list
+        else:
+            predictions = self.predictor.predict(stockName, 3, interval)
+            self.predictionsDB.savePrediction(stockName, interval, predictions)
+        
+            with self.chacheLock:
                 if interval == "1h":
                     self.currentPredictionsHour[stockName] = {i+1: pred for i, pred in enumerate(predictions)}
                 else:
                     self.currentPredictionsDay[stockName] = {i+1: pred for i, pred in enumerate(predictions)}
-
-                return predictions
+        
+            return predictions
 
     def getHistoricalPredictions(self, stockName, interval, dates, steps=[1, 2, 3]):
         historical = {}
@@ -54,8 +55,8 @@ class PredictionRepository:
         for date in dates:
             step_list = []
             for step in steps:
-                step_list.append(date_to_step_preds.get(date, {}).get(step, None))
-            historical[date] = step_list
+                step_list.append(date_to_step_preds.get(date.isoformat(), {}).get(step, None))
+            historical[date.isoformat()] = step_list
     
         return historical
 
@@ -65,11 +66,11 @@ class PredictionRepository:
 
         table_cache = self.currentPredictionsHour if interval == "1h" else self.currentPredictionsDay
 
-        with self.lock:
-            
-            predictionPacketList = self.predictor.predict(stockName, 3, interval)
+        predictionPacketList = self.predictor.predict(stockName, 3, interval)
 
-            self.predictionsDB.savePrediction(stockName, interval, predictionPacketList)
+        self.predictionsDB.savePrediction(stockName, interval, predictionPacketList)
 
-            step_dict = {i + 1: pkt for i, pkt in enumerate(predictionPacketList)}
+        step_dict = {i + 1: pkt for i, pkt in enumerate(predictionPacketList)}
+
+        with self.chacheLock:
             table_cache[stockName] = step_dict

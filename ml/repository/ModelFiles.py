@@ -5,7 +5,7 @@ from ml import ModelInfo
 from joblib import dump, load
 import json
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timezone
 
 class ModelFiles:
 
@@ -48,12 +48,17 @@ class ModelFiles:
         try:
             with open(infoPath, 'r') as f:
                 infoDict = json.load(f)
+
+                # JSON can't save datetime objects, so we need to convert them back
+                infoDict['latestUpdate'] = datetime.fromisoformat(infoDict['latestUpdate']).replace(tzinfo=timezone.utc)
+                infoDict['trainUntil'] = datetime.fromisoformat(infoDict['trainUntil']).replace(tzinfo=timezone.utc)
+
                 info = ModelInfo.ModelInfo(**infoDict)
+                return info
         except Exception as e:
             print(f"Error loading info for model {infoPath}: {e}")
             return None
 
-        return info
 
 
 
@@ -84,7 +89,7 @@ class ModelFiles:
         #save info
         try:
             with open(infoPath, 'w') as f:
-                json.dump(asdict(model.getInfo()), f, indent=4)
+                json.dump(model.getInfo().toDict(), f, indent=4)
         except Exception as e:
             print(f"Error saving info: {e}")
             return None
@@ -96,22 +101,3 @@ class ModelFiles:
             "scaler_path": scalerPath,
             "info_path": infoPath
         }
-
-
-
-    def isModelUpdated(self, modelName, latestStockUpdate):
-        model = self.loadModel(modelName)
-        if model is None:
-            print(f"No saved model found for stock {modelName}.")
-            return False
-        modelInfo = model.getInfo()
-
-        if modelInfo is None:
-            print(f"Model info for {modelName} is missing.")
-            return False
-        if datetime.strptime(modelInfo.latestUpdate, "%Y-%m-%d") >= datetime.strptime(latestStockUpdate, "%Y-%m-%d"):
-            print(f"Model for {modelName} is up to date.")
-            return True
-        else:
-            print(f"Model for {modelName} is outdated.")
-            return False

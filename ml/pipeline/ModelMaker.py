@@ -50,11 +50,10 @@ class ModelMaker:
         modelProd = self.modelTrainer.trainModel(modelProd, dataX, dataY)
         
 
-        dateFormat = "%Y-%m-%d" if interval == "1d" else "%Y-%m-%d %H"
-        modelDev.addInfo(self.createInfo(data.index[-1].strftime(dateFormat),
+        modelDev.addInfo(self.createInfo(data.index[-1],
                                       hyperParams, 
                                       metrics, 
-                                      data.index[(len(data) - len(Xtest))-1].strftime(dateFormat), 
+                                      data.index[(len(data) - len(Xtest))-1], 
                                       numSamples))
         modelProd.addInfo(modelDev.info)
 

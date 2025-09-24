@@ -6,6 +6,7 @@ from stockMath import StockMath
 import yfinance as yf
 from data import Stock
 from pathlib import Path
+import locks
 
 
 class StockManager():
@@ -41,13 +42,14 @@ class StockManager():
 
         print(f"Updating [interval={interval}] stocks: {tickers}")
     
-        newData = yf.download(
-            tickers=tickers,
-            start=latestUpdate,
-            end=currentTime,
-            interval=interval,
-            auto_adjust=True
-        )
+        with locks.yfLock:
+            newData = yf.download(
+                tickers=tickers,
+                start=latestUpdate,
+                end=currentTime,
+                interval=interval,
+                auto_adjust=True
+            )
     
         updatePackages = []
 
@@ -71,9 +73,9 @@ class StockManager():
 
     def addStock(self, stockName):
         if not stockName in self.stockDB.getAllTickers():
-            
-            stockDataDaily = yf.download(stockName, start=self.latestFetchPointDaily, end=pd.Timestamp.now(), interval='1d', auto_adjust=True)
-            stockDataHourly = yf.download(stockName, interval='1h', auto_adjust=True, period=self.fetchPeriodHourly)
+            with locks.yfLock:
+                stockDataDaily = yf.download(stockName, start=self.latestFetchPointDaily, end=pd.Timestamp.now(), interval='1d', auto_adjust=True)
+                stockDataHourly = yf.download(stockName, interval='1h', auto_adjust=True, period=self.fetchPeriodHourly)
 
             if isinstance(stockDataDaily.columns, pd.MultiIndex):
                 stockDataDaily.columns = stockDataDaily.columns.get_level_values(0) #needed to avoid formatting issues
@@ -96,13 +98,9 @@ class StockManager():
 
     #private
     def buildUpdatePackage(self, ticker, data, interval):
-        if interval == "1d":
-            timeStr = data.index[-1].strftime("%Y-%m-%d")
-        elif interval == "1h":
-            timeStr = data.index[-1].strftime("%Y-%m-%d %H")
         return StockUpdateInfo.StockUpdateInfo(
             stockName=ticker,
-            latestUpdateTime=timeStr,
+            latestUpdateTime=data.index[-1],
             interval=interval
         )
 

@@ -30,7 +30,6 @@ def setupUpdateLoops(predictionRepository):
     threading.Thread(target=modelUpdater.run, daemon=True, name="ModelUpdater").start()
 
 #TODO: Minuten aggregierungstrick testen: bei yf update 1m wenn 1h gegeben und dann pd aggregieren
-#TODO: FLASK THREADS CRASHEN AUCH BEI PARRALELEM DB ZUGRIFF: Lösung: Einfach immer neuen Cursor in den Funktionen machen, conn aus einem pool holen
 
 #
 if __name__ == "__main__":
@@ -46,6 +45,7 @@ if __name__ == "__main__":
         
     #root.mainloop()
 
+    #Alles Datetime machen in UTC
     
     stockManager = StockManager.StockManager()
     modelManager = ModelManager()
@@ -59,8 +59,6 @@ if __name__ == "__main__":
     server = Server(predictionRepository, stockManager=stockManager, modelManager=modelManager)
     
     server.start()
-
-
 
     #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)
     #frame.run()

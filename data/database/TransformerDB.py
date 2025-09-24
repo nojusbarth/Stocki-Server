@@ -9,7 +9,16 @@ class TransformerDB:
 
 
 
-    def dataToDB(self, dataFrame, ticker):
+    def dataToDB(self, dataFrame, ticker, interval):
+
+        if not isinstance(dataFrame.index, pd.DatetimeIndex):
+            dataFrame.index = pd.to_datetime(dataFrame.index)
+
+        if interval == "1d":
+            dataFrame.index = dataFrame.index.normalize()
+        elif interval == "1h":
+            dataFrame.index = dataFrame.index.floor('H')
+
 
         #columns are saved lower case in DB
         dataFrame.rename(columns={
@@ -20,12 +29,12 @@ class TransformerDB:
             "Volume": "volume"
         }, inplace=True)
 
-
-        if not isinstance(dataFrame.index, (pd.DatetimeIndex, pd.MultiIndex)):
-            raise TypeError("Expected DataFrame with DatetimeIndex")
         
         dataFrame = dataFrame.reset_index()
         dataFrame.rename(columns={dataFrame.columns[0]: "date"}, inplace=True)
+        #timezone not allowed in db (sql error)
+        dataFrame.index = dataFrame.index.tz_localize('UTC')
+        dataFrame.index = dataFrame.index.tz_convert(None)
 
         if "ticker" not in dataFrame.columns:
             dataFrame["ticker"] = ticker
@@ -41,7 +50,7 @@ class TransformerDB:
     def DBtoData(self, dataFrame):
 
         dataFrame = dataFrame.set_index("date")
-        dataFrame.index = pd.to_datetime(dataFrame.index)
+        dataFrame.index = pd.to_datetime(dataFrame.index, utc=True)
 
         dataFrame.rename(columns={
             "open": "Open",

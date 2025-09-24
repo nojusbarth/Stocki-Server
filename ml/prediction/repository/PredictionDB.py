@@ -6,6 +6,7 @@ from mysql.connector import Error
 
 from ml.prediction import PredictionPacket
 from mysql.connector import pooling
+from datetime import datetime, timezone
 
 
 
@@ -47,9 +48,15 @@ class PredictionDB:
 
             for i, predictionPacket in enumerate(predictionPacketList):
                 step = i + 1
+
+                # UTC date without timezone info for MySQL
+                dateForDB = predictionPacket.date
+                if dateForDB.tzinfo is not None:
+                    dateForDB = dateForDB.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+
                 values = (
                     stockName.upper(),
-                    predictionPacket.date,
+                    dateForDB,
                     step,
                     predictionPacket.pctReturn,
                     predictionPacket.closePrediction,
@@ -80,6 +87,9 @@ class PredictionDB:
             FROM {table}
             WHERE ticker=%s AND date=%s AND step=%s
             """
+
+            dateNoLoc = date.tz_convert(None)
+
             try:
                 cursor.execute(query, (stockName.upper(), date, step))
                 row = cursor.fetchone()
@@ -91,13 +101,13 @@ class PredictionDB:
                         closePrediction=row['closePrediction'],
                         riskScore=row['riskScore']
                     )
-                    result[date] = pkt
+                    result[date.isoformat()] = pkt
                 else:
-                    result[date] = None
+                    result[date.isoformat()] = None
     
             except Error as e:
-                print(f"Error loading prediction for {stockName} on {date}: {e}")
-                result[date] = None
+                print(f"Error loading prediction for {stockName} on {date.isoformat()}: {e}")
+                result[date.isoformat()] = None
 
         cursor.close()
         conn.close()            
@@ -133,7 +143,7 @@ class PredictionDB:
                     row = cursor.fetchone()
                     if row:
                         pkt = PredictionPacket.PredictionPacket(
-                            date=row['date'],
+                            date=row['date'].replace(tzinfo=timezone.utc),
                             pctReturn=row['pctReturn'],
                             closePrediction=row['closePrediction'],
                             riskScore=row['riskScore']

@@ -24,11 +24,10 @@ class StockUpdater:
             updateBatch = stockManager.getStockTickers()
             print(f"Running update for {self.interval} at {datetime.now()}")
 
-            with locks.yfLock:
-                updatedStocks = stockManager.updateStocks(self.interval, updateBatch)
+            updatedStocks = stockManager.updateStocks(self.interval, updateBatch)
 
-                if updatedStocks:
-                    self.queue.put(updatedStocks)
+            if updatedStocks:
+                self.queue.put(updatedStocks)
 
        
 

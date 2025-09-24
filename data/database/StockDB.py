@@ -56,7 +56,7 @@ class StockDB:
     def addStockData(self, stockName, stockData, interval):
         stockData = stockData.copy()
 
-        stockData = self.dbTranformer.dataToDB(stockData, stockName)
+        stockData = self.dbTranformer.dataToDB(stockData, stockName, interval)
 
         return self.dbWriter.addStockData(stockName, stockData, interval, self.getTableName(interval))
 

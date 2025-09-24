@@ -14,18 +14,16 @@ class AccuracyPackager:
     
         stockData = self.stockManager.getStockData(stockName, interval).tail(num)
     
-        if interval == "1d":
-            dates = [pd.to_datetime(d).strftime("%Y-%m-%d") for d in stockData.index]
-        else:
-            dates = [pd.to_datetime(d).strftime("%Y-%m-%d-%H") for d in stockData.index]
+        dates = stockData.index.tolist()
     
         predictionMap = self.predictionRepository.getHistoricalPredictions(
             stockName, interval, dates, steps=[1, 2, 3]
         )
     
         packetsByDate = {}
-    
-        for i, date_str in enumerate(dates):
+        datesStr = [date.isoformat() for date in dates]
+
+        for i, date_str in enumerate(datesStr):
             stepPackets = []
             preds_for_date = predictionMap.get(date_str, [])
             actualClose = stockData.iloc[i]['Close']

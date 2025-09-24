@@ -8,9 +8,8 @@ class PredictionDateMapper:
     def __init__(self, exchange="NYSE"):
         self.calendar = mcal.get_calendar(exchange)
 
-        self.daysFuture=365
+        self.daysFuture = 365
         self.daysPast = 30
-
 
         today = pd.Timestamp.utcnow().normalize()
 
@@ -22,6 +21,32 @@ class PredictionDateMapper:
         self.dayMap = self.precomputeIntervals(schedule, "1d")
         self.hourMap = self.precomputeIntervals(schedule, "1h")
 
+    # private
+    def precomputeIntervals(self, schedule, interval):
+        intervals = []
+
+        for market_open, market_close in zip(schedule.market_open, schedule.market_close):
+            market_open_et = market_open.tz_convert("America/New_York")
+            market_close_et = market_close.tz_convert("America/New_York")
+
+            pre_open_et = market_open_et.replace(hour=4, minute=0, second=0, microsecond=0)    # Pre-Market 04:00 ET
+            post_close_et = market_close_et.replace(hour=20, minute=0, second=0, microsecond=0)  # After-Hours 20:00 ET
+
+            if interval == "1d":
+                midnight_utc = pre_open_et.tz_convert("UTC").normalize()
+                intervals.append(midnight_utc)
+            elif interval == "1h":
+                times = pd.date_range(
+                    start=pre_open_et,
+                    end=post_close_et,
+                    freq="1h",
+                    inclusive="left"
+                )
+
+                times = times.tz_convert("UTC")
+                intervals.extend(times)
+
+        return pd.DatetimeIndex(intervals)
 
 
 
@@ -32,10 +57,8 @@ class PredictionDateMapper:
 
         if interval == "1d":
             valid_times = self.dayMap
-            fmt = "%Y-%m-%d"
         elif interval == "1h":
             valid_times = self.hourMap
-            fmt = "%Y-%m-%d-%H"
         else:
             raise ValueError("invalid format")
 
@@ -51,41 +74,6 @@ class PredictionDateMapper:
         next_times = valid_times[:n_predictions]
 
         for packet, ts in zip(predictionPackets, next_times):
-            packet.date = ts.strftime(fmt)
+            packet.date = ts.replace(minute=0, second=0, microsecond=0)
 
         return predictionPackets
-
-
-        assign_times = valid_times[:len(predictionPackets)].to_list()
-
-        fmt = "%Y-%m-%d"
-        if interval == "1d":
-            fmt = "%Y-%m-%d"
-        elif interval == "1h":
-            fmt = "%Y-%m-%d-%H"
-
-        for packet, ts in zip(predictionPackets, assign_times):
-            packet.date = ts.strftime(fmt)
-
-        return predictionPackets
-
-
-
-
-
-    #private
-    def precomputeIntervals(self, schedule, interval):
-        intervals = []
-        for market_open, market_close in zip(schedule.market_open, schedule.market_close):
-            if interval == "1d":
-                intervals.append(market_open)
-            elif interval == "1h":
-                times = pd.date_range(
-                    start=market_open,
-                    end=market_close,
-                    freq="1h",
-                    inclusive="left"
-                )
-                intervals.extend(times)
-
-        return pd.DatetimeIndex(intervals).tz_convert("UTC")

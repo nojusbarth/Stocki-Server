@@ -49,24 +49,12 @@ class ModelManager:
 
     def isModelUpdated(self, stockUpdateInfo):
 
-        modelUpdateStr = self.modelRepository.getModelUpdateTime(
+        modelUpdateTime = self.modelRepository.getModelUpdateTime(
             stockUpdateInfo.stockName, 
             stockUpdateInfo.interval, 
             stage="dev", 
             version="test"
         )
-        stockUpdateStr = stockUpdateInfo.latestUpdateTime
 
-        if stockUpdateInfo.interval == "1d":
-            dt_format = "%Y-%m-%d"
-            modelUpdateTime = datetime.strptime(modelUpdateStr, dt_format).date()
-            stockUpdateTime = datetime.strptime(stockUpdateStr, dt_format).date()
-        elif stockUpdateInfo.interval == "1h":
-            dt_format = "%Y-%m-%d %H"
-            modelUpdateTime = datetime.strptime(modelUpdateStr, dt_format).replace(minute=0, second=0, microsecond=0)
-            stockUpdateTime = datetime.strptime(stockUpdateStr, dt_format).replace(minute=0, second=0, microsecond=0)
-        else:
-            raise ValueError(f"Unbekanntes Interval: {stockUpdateInfo.interval}")
-
-        return modelUpdateTime >= stockUpdateTime
+        return modelUpdateTime >= stockUpdateInfo.latestUpdateTime
 
