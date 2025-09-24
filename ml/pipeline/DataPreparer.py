@@ -11,7 +11,6 @@ class DataPreparer():
         "Close_Open",
         "SMA_10",
         "SMA_30",
-        "Volume_Change",
         "Rolling_Vol_10",
         "Momentum_5",
         "Momentum_10"]
@@ -31,7 +30,6 @@ class DataPreparer():
         data["Close_Open"] = data["Close"] - data["Open"]
         data["SMA_10"] = data["Close"].rolling(10).mean()
         data["SMA_30"] = data["Close"].rolling(30).mean()
-        data["Volume_Change"] = data["Volume"].pct_change(fill_method=None)
 
         data["Rolling_Vol_10"] = data["Return"].rolling(10).std()
         data["Momentum_5"] = data["Close"].pct_change(periods=5)

@@ -17,8 +17,11 @@ class TransformerDB:
         if interval == "1d":
             dataFrame.index = dataFrame.index.normalize()
         elif interval == "1h":
-            dataFrame.index = dataFrame.index.floor('H')
-
+            dataFrame.index = dataFrame.index.floor('h')
+        
+        #timezone not allowed in db (sql error)
+        if dataFrame.index.tzinfo is not None:
+            dataFrame.index.tz_convert(None)
 
         #columns are saved lower case in DB
         dataFrame.rename(columns={
@@ -32,9 +35,6 @@ class TransformerDB:
         
         dataFrame = dataFrame.reset_index()
         dataFrame.rename(columns={dataFrame.columns[0]: "date"}, inplace=True)
-        #timezone not allowed in db (sql error)
-        dataFrame.index = dataFrame.index.tz_localize('UTC')
-        dataFrame.index = dataFrame.index.tz_convert(None)
 
         if "ticker" not in dataFrame.columns:
             dataFrame["ticker"] = ticker

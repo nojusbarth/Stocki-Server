@@ -29,8 +29,6 @@ def setupUpdateLoops(predictionRepository):
     threading.Thread(target=dayStockUpdater.run, daemon=True, name="StockUpdater-1d").start()
     threading.Thread(target=modelUpdater.run, daemon=True, name="ModelUpdater").start()
 
-#TODO: Minuten aggregierungstrick testen: bei yf update 1m wenn 1h gegeben und dann pd aggregieren
-
 #
 if __name__ == "__main__":
     
@@ -54,13 +52,15 @@ if __name__ == "__main__":
 
     predictionRepository = PredictionRepository.PredictionRepository(predictor=predictor)
 
-    #setupUpdateLoops(predictionRepository)
+
+    setupUpdateLoops(predictionRepository)
     
-    server = Server(predictionRepository, stockManager=stockManager, modelManager=modelManager)
+    #server = Server(predictionRepository, stockManager=stockManager, modelManager=modelManager)
     
-    server.start()
+    #server.start()
 
     #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)
     #frame.run()
+
 
     input("Press Enter to exit...")

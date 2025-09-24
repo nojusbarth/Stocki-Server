@@ -52,7 +52,7 @@ class PredictionDB:
                 # UTC date without timezone info for MySQL
                 dateForDB = predictionPacket.date
                 if dateForDB.tzinfo is not None:
-                    dateForDB = dateForDB.astimezone(datetime.timezone.utc).replace(tzinfo=None)
+                    dateForDB = dateForDB.astimezone(timezone.utc).replace(tzinfo=None)
 
                 values = (
                     stockName.upper(),

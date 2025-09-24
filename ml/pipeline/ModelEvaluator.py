@@ -17,9 +17,6 @@ class ModelEvaluator():
         yTruePrice = testCloses * (1 + testY)
         yPredPrice = testCloses * (1 + yPredRet)
 
-        residuals = yTruePrice - yPredPrice
-        print(np.min(residuals), np.max(residuals))
-
         rmse = np.sqrt(mean_squared_error(yTruePrice, yPredPrice))
         mae  = mean_absolute_error(yTruePrice, yPredPrice)
         r2   = r2_score(yTruePrice, yPredPrice)

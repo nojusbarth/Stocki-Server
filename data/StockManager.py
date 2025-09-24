@@ -42,32 +42,34 @@ class StockManager():
 
         print(f"Updating [interval={interval}] stocks: {tickers}")
     
-        with locks.yfLock:
-            newData = yf.download(
-                tickers=tickers,
-                start=latestUpdate,
-                end=currentTime,
-                interval=interval,
-                auto_adjust=True
-            )
-    
+
+        newData = self.downloadData(tickersToUpdate, latestUpdate, currentTime, interval)
+
         updatePackages = []
 
-        for ticker in tickers:
+        for ticker in tickersToUpdate:
             if isinstance(newData.columns, pd.MultiIndex):
                 tickerData = newData.xs(ticker, level=1, axis=1).copy()
             else:
                 tickerData = newData.copy()
 
+            #convert minutes to hours
+            if interval == "1h" and not tickerData.empty:
+                tickerData = tickerData.resample("1h", label="left", closed="left").agg({
+                    "Open": "first",
+                    "High": "max",
+                    "Low": "min",
+                    "Close": "last",
+                    "Volume": "sum"
+                })
+                tickerData = tickerData[tickerData.index + pd.Timedelta(hours=1) <= currentTime]
+            
             tickerData = self.cleanUpdateData(tickerData)
-
             if not tickerData.empty:
                 self.stockDB.addStockData(ticker, tickerData, interval=interval)
                 updatePackages.append(self.buildUpdatePackage(ticker,tickerData,interval))
 
         return updatePackages
-
-
 
 
 
@@ -98,9 +100,21 @@ class StockManager():
 
     #private
     def buildUpdatePackage(self, ticker, data, interval):
+        ts = pd.to_datetime(data.index[-1])
+
+        if ts.tzinfo is None:
+            ts = ts.tz_localize("UTC")
+        else:
+            ts = ts.tz_convert("UTC")
+
+        if interval == "1h":
+            ts = ts.floor("h")
+        elif interval == "1d":
+            ts = ts.normalize()
+
         return StockUpdateInfo.StockUpdateInfo(
             stockName=ticker,
-            latestUpdateTime=data.index[-1],
+            latestUpdateTime=ts,
             interval=interval
         )
 
@@ -110,13 +124,51 @@ class StockManager():
     def getStockTickers(self):
         return self.stockDB.getAllTickers()
 
+    #private
+    def downloadData(self, tickersToUpdate, latestUpdate, currentTime, interval):
+        newData = None
+        if interval == "1h":
+            # By switching to 1m data for 1h updates, we can get prepost market data 
+            # (ONLY WORKS IF LAST UPDATE WAS AT MAX 7 DAYS AGO    
+            allData = [] #prepost only allows single ticker download
+            with locks.yfLock:
+                for ticker in tickersToUpdate:
+                    df = yf.download(
+                        ticker,
+                        start=latestUpdate,
+                        end=currentTime,
+                        interval="1m",
+                        auto_adjust=True,
+                        prepost=True
+                    )
+                    if isinstance(df.columns, pd.MultiIndex):
+                        df = df.copy()
+                        df.columns = df.columns.get_level_values(0)
+                    df.columns = pd.MultiIndex.from_product([df.columns, [ticker]])
+                    allData.append(df)
+
+            newData = pd.concat(allData, axis=1)
+
+        elif interval=="1d":
+            with locks.yfLock:
+
+                newData = yf.download(
+                    tickers=tickersToUpdate,
+                    start=latestUpdate,
+                    end=currentTime,
+                    interval=interval,
+                    auto_adjust=True
+                )
+
+        return newData
 
 
     #private 
     def cleanUpdateData(self, data):
         data = data.dropna(how="any")
-        data = data[(data != 0).all(axis=1)]
-
+        cols_to_check = [c for c in data.columns if c.lower() != "volume"]
+        data = data[(data[cols_to_check] != 0).all(axis=1)]
+        
         return data
 
 
