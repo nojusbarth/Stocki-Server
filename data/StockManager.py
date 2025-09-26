@@ -54,14 +54,15 @@ class StockManager():
 
             #convert minutes to hours
             if interval == "1h" and not tickerData.empty:
-                tickerData = tickerData.resample("1h", label="left", closed="left").agg({
+                tickerData = tickerData.resample("1h", label="right", closed="right").agg({
                     "Open": "first",
                     "High": "max",
                     "Low": "min",
                     "Close": "last",
                     "Volume": "sum"
                 })
-                tickerData = tickerData[tickerData.index + pd.Timedelta(hours=1) <= currentTime]
+                tickerData = tickerData[tickerData.index <= currentTime.floor("h")]
+
             
             tickerData = self.cleanUpdateData(tickerData)
             if not tickerData.empty:
@@ -96,7 +97,6 @@ class StockManager():
 
             if stockDataDaily.empty or stockDataHourly.empty:
                 print(f"Stock {stockName} not found.")
-                return
 
             self.stockDB.addStockData(stockName, stockDataDaily, interval='1d')
             self.stockDB.addStockData(stockName, stockDataHourly, interval='1h')

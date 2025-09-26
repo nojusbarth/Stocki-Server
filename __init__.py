@@ -32,7 +32,6 @@ def setupUpdateLoops(predictionRepository):
     threading.Thread(target=modelUpdater.run, daemon=True, name="ModelUpdater").start()
 
 
-#TODO: ERSTER TICKER STIRBT BEI TABELLE
 if __name__ == "__main__":
     
     # root
@@ -55,12 +54,11 @@ if __name__ == "__main__":
     predictionRepository = PredictionRepository.PredictionRepository(predictor=predictor)
     
 
-    setupUpdateLoops(predictionRepository)
-    
-
+    #setupUpdateLoops(predictionRepository)
 
     server = Server(predictionRepository, stockManager=stockManager, modelManager=modelManager)
     server.start()
+
 
     #frame = MainFrame.MainFrame(stockManager=stockManager,modelManager=modelManager)
     #frame.run()

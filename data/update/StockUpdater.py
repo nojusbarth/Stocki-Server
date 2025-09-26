@@ -29,15 +29,15 @@ class StockUpdater:
             if updatedStocks:
                 self.queue.put(updatedStocks)
 
-                update_duration = time.time() - start_time
 
-                self.logger.info({
-                    "event": "stock_update_complete",
-                    "interval": self.interval,
-                    "update_duration_s": round(update_duration, 2),
-                    "sleep_s": self.calculateSleepSeconds(),
-                    "thread": threading.current_thread().name
-                })
+            update_duration = time.time() - start_time
+            self.logger.info({
+                "event": "stock_update_complete",
+                "interval": self.interval,
+                "update_duration_s": round(update_duration, 2),
+                "sleep_s": self.calculateSleepSeconds(),
+                "thread": threading.current_thread().name
+            })
 
             sleepSeconds = self.calculateSleepSeconds()
             sleep(sleepSeconds)
