@@ -1,12 +1,11 @@
 
 import pandas as pd
-from data.database import StockDB
-from data.update import StockUpdateInfo
+from shared.data.database import StockDB
+from shared.data import StockUpdateInfo
 from stockMath import StockMath
 import yfinance as yf
-from data import Stock
 from pathlib import Path
-import locks
+from shared.locks import yfLock
 import logging
 import threading
 
@@ -85,7 +84,7 @@ class StockManager():
 
     def addStock(self, stockName):
         if not stockName in self.stockDB.getAllTickers():
-            with locks.yfLock:
+            with yfLock:
                 stockDataDaily = yf.download(stockName, start=self.latestFetchPointDaily, end=pd.Timestamp.now(), interval='1d', auto_adjust=True)
                 stockDataHourly = yf.download(stockName, interval='1h', auto_adjust=True, period=self.fetchPeriodHourly)
 
@@ -140,7 +139,7 @@ class StockManager():
             # By switching to 1m data for 1h updates, we can get prepost market data 
             # (ONLY WORKS IF LAST UPDATE WAS AT MAX 7 DAYS AGO    
             allData = [] #prepost only allows single ticker download
-            with locks.yfLock:
+            with yfLock:
                 for ticker in tickersToUpdate:
                     df = yf.download(
                         ticker,
@@ -159,7 +158,7 @@ class StockManager():
             newData = pd.concat(allData, axis=1)
 
         elif interval=="1d":
-            with locks.yfLock:
+            with yfLock:
 
                 newData = yf.download(
                     tickers=tickersToUpdate,

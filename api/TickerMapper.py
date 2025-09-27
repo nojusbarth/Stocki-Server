@@ -1,6 +1,6 @@
 
 import pandas as pd
-import locks
+import shared.locks
 import yfinance as yf
 from pathlib import Path
 from datetime import datetime

@@ -1,9 +1,8 @@
 from datetime import datetime, timedelta
 from time import sleep
-from data import StockManager
+from shared.data import StockManager
 import threading
 import time
-import locks
 import logging
 
 class StockUpdater:

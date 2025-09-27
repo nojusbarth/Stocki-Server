@@ -1,9 +1,9 @@
-from ml.pipeline import DataPreparer
-from ml import ModelInfo
-from ml.pipeline import ModelTrainer
-from ml.pipeline import ModelEvaluator
-from ml.pipeline import HyperTuner
-from ml import Model
+from shared.ml.pipeline import DataPreparer
+from shared.ml import ModelInfo
+from shared.ml.pipeline import ModelTrainer
+from shared.ml.pipeline import ModelEvaluator
+from shared.ml.pipeline import HyperTuner
+from shared.ml import Model
 import logging
 
 from xgboost import XGBRegressor

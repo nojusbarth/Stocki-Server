@@ -6,16 +6,25 @@ import time
 import threading
 import logging
 
+from shared.ml.prediction.repository import PredictionRepository
+from shared.data import StockManager
+from shared.ml import ModelManager
+from shared.ml.prediction import Predictor
+
 class Server:
 
-    def __init__(self, predictonRep, stockManager, modelManager):
+    def __init__(self, predictionQueue):
         self.logger = logging.getLogger("api")
         
-        self.predictonRep = predictonRep
-        self.stockManager = stockManager
-        self.modelManager = modelManager
+        self.stockManager = StockManager.StockManager()
+        self.modelManager = ModelManager.ModelManager()
+        self.predictonRep = PredictionRepository.PredictionRepository(Predictor.Predictor(self.modelManager, self.stockManager), predictionQueue)
+
+        self.predictionUpdateThread = threading.Thread(target=self.predictonRep.updatePredictionLoop, daemon=True)
+
+
         self.tickerMap = TickerMapper.TickerMapper(self.stockManager.getStockTickers())
-        self.accuracyPackager = AccuracyPackager.AccuracyPackager(stockManager, predictonRep)
+        self.accuracyPackager = AccuracyPackager.AccuracyPackager(self.stockManager, self.predictonRep)
 
         self.app = Flask(__name__)
         self.setupLoggingHooks() 
@@ -134,8 +143,7 @@ class Server:
             return jsonify(jsonReady)
 
     def start(self):
+        self.predictionUpdateThread.start()
+
         self.app.run(host="0.0.0.0", port=5000, debug=False)
 
-    def shutdown(self):
-        if Server._instances == 0 and Server.app_logger_instance:
-            Server.app_logger_instance.stop_listener()

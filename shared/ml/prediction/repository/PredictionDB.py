@@ -4,7 +4,7 @@ import mysql.connector
 from dotenv import load_dotenv
 from mysql.connector import Error
 
-from ml.prediction import PredictionPacket
+from shared.ml.prediction import PredictionPacket
 from mysql.connector import pooling
 from datetime import datetime, timezone
 

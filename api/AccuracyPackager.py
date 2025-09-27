@@ -1,6 +1,6 @@
 
 from re import S
-from ml.prediction import AccuracyPacket
+from shared.ml.prediction import AccuracyPacket
 import pandas as pd
 
 class AccuracyPackager:

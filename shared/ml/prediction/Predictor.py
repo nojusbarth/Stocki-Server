@@ -1,13 +1,13 @@
 from datetime import timedelta
-from ml.pipeline import DataPreparer
-from ml.prediction import PredictionDateMapper, PredictionPacket, RiskCalculator
-from ml import ModelManager
+from shared.ml.pipeline import DataPreparer
+from shared.ml.prediction import PredictionDateMapper, PredictionPacket, RiskCalculator
+from shared.ml import ModelManager
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from data import StockManager
+from shared.data import StockManager
 
 class Predictor():
 

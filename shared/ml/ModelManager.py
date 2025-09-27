@@ -6,10 +6,10 @@ from xgboost import XGBRegressor
 from datetime import datetime, timedelta
 from sklearn.metrics import mean_squared_error
 from pathlib import Path
-from ml.pipeline import DataPreparer
+from shared.ml.pipeline import DataPreparer
 
-from ml.pipeline import ModelMaker
-from ml.repository import ModelRepository
+from shared.ml.pipeline import ModelMaker
+from shared.ml.repository import ModelRepository
 import logging
 import threading
 

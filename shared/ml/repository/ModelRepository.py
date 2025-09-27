@@ -1,7 +1,7 @@
 
 
 from pathlib import Path
-from ml.repository import ModelDB, ModelFiles
+from shared.ml.repository import ModelDB, ModelFiles
 from dotenv import load_dotenv
 import os
 

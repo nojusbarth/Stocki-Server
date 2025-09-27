@@ -1,14 +1,17 @@
 
-from ml.prediction import PredictionPacket
-import ml.prediction.repository.PredictionDB as PredictionDB
+from shared.ml.prediction import PredictionPacket
+import shared.ml.prediction.repository.PredictionDB as PredictionDB
 import threading
+import queue
 
 class PredictionRepository:
 
-    def __init__(self, predictor):
+    def __init__(self, predictor, predictionQueue):
         self.predictionsDB = PredictionDB.PredictionDB()
         self.predictor = predictor
+        self.predictionQueue = predictionQueue
         self.chacheLock = threading.Lock()
+        self.timeOutQueue=0.5
 
 
         self.currentPredictionsHour = self.predictionsDB.loadAllCurrent("1h")
@@ -62,15 +65,24 @@ class PredictionRepository:
 
 
 
-    def updatePrediction(self, stockName, interval):
+    def updatePredictionLoop(self):
+        while True:
+            try:
+                stockInfo = self.predictionQueue.get(timeout=self.timeOutQueue)
+                interval = stockInfo.interval
+                stockName = stockInfo.stockName
 
-        table_cache = self.currentPredictionsHour if interval == "1h" else self.currentPredictionsDay
+                print(f"Updating predictions for {stockName} ({interval})", flush=True)
 
-        predictionPacketList = self.predictor.predict(stockName, 3, interval)
+                table_cache = self.currentPredictionsHour if interval == "1h" else self.currentPredictionsDay
 
-        self.predictionsDB.savePrediction(stockName, interval, predictionPacketList)
+                predictionPacketList = self.predictor.predict(stockName, 3, interval)
 
-        step_dict = {i + 1: pkt for i, pkt in enumerate(predictionPacketList)}
+                self.predictionsDB.savePrediction(stockName, interval, predictionPacketList)
 
-        with self.chacheLock:
-            table_cache[stockName] = step_dict
+                step_dict = {i + 1: pkt for i, pkt in enumerate(predictionPacketList)}
+
+                with self.chacheLock:
+                    table_cache[stockName] = step_dict
+            except queue.Empty:
+                continue

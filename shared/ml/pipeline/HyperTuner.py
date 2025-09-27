@@ -2,7 +2,7 @@
 
 import optuna
 import numpy as np
-from ml.pipeline import ModelEvaluator
+from shared.ml.pipeline import ModelEvaluator
 from xgboost import XGBRegressor
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 from sklearn.metrics import mean_squared_error

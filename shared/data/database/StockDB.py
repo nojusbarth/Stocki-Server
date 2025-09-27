@@ -4,7 +4,7 @@ import mysql.connector
 from dotenv import load_dotenv
 
 
-from data.database import StockReader, StockWriter, TransformerDB
+from shared.data.database import StockReader, StockWriter, TransformerDB
 
 
 class StockDB:
